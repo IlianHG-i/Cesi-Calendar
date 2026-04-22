@@ -7,7 +7,6 @@
     'use strict';
 
     // Éléments DOM
-    const exportTxtBtn = document.getElementById('exportTxtBtn');
     const exportIcsBtn = document.getElementById('exportIcsBtn');
     const exportGoogleBtn = document.getElementById('exportGoogleBtn');
     const statusDiv = document.getElementById('status');
@@ -96,7 +95,6 @@
      * Active/désactive les boutons d'export
      */
     function setButtonsState(enabled) {
-        exportTxtBtn.disabled = !enabled;
         exportIcsBtn.disabled = !enabled;
         exportGoogleBtn.disabled = !enabled;
     }
@@ -194,7 +192,7 @@
 
     /**
      * Gère le clic sur un bouton d'export
-     * @param {string} format - Format d'export: 'text', 'ics', ou 'google'
+     * @param {string} format - Format d'export: 'ics' ou 'google'
      */
     async function handleExport(format) {
         try {
@@ -205,7 +203,6 @@
 
             // Messages selon le format
             const formatLabels = {
-                'text': 'TXT',
                 'ics': 'iCal',
                 'google': 'Google Calendar'
             };
@@ -223,7 +220,7 @@
                 throw new Error('Aucun événement trouvé dans l\'emploi du temps');
             }
 
-            // Pour les formats TXT et iCal, le téléchargement est géré par le content script
+            // Pour iCal, le téléchargement est géré par le content script
             // Pour Google, l'export est fait directement par l'API
 
             // Afficher le succès
@@ -275,8 +272,7 @@
             setButtonsState(false);
         }
 
-        // Écouter les clics sur les 3 boutons
-        exportTxtBtn.addEventListener('click', () => handleExport('text'));
+        // Écouter les clics sur les boutons
         exportIcsBtn.addEventListener('click', () => handleExport('ics'));
         exportGoogleBtn.addEventListener('click', () => handleExport('google'));
     }
