@@ -1,28 +1,36 @@
 # feat/export-3-weeks
 
 ## Objectif
-Étendre l'export de 1 semaine à **3 semaines** : la semaine actuellement affichée + les 2 suivantes. Remplace le comportement existant (pas de nouveau bouton).
+Ajouter la possibilité d'exporter **plusieurs semaines consécutives** (semaine courante + N suivantes).
+Le bouton existant (export 1 semaine) reste **inchangé**. On ajoute un **nouveau bouton** dans le popup avec un sélecteur du nombre de semaines (ex: 2, 3, 4…), par défaut 3.
 
 ## Scope
+- `popup.html` :
+  - Conserver les boutons existants (iCal 1 semaine, Google, etc.)
+  - Ajouter un nouveau bouton "Exporter plusieurs semaines" + un `<select>` ou `<input type="number">` pour choisir le nombre
+- `scripts/popup.js` :
+  - Nouveau handler qui envoie `{ action: 'extractEvents', format: 'ics', weeks: N }` au content script
 - `scripts/content-script.js` :
-  - Actuellement `extractFullWeek()` extrait 6 jours (Lundi→Samedi) via navigation jour par jour.
-  - Il faut étendre pour faire 3 × 6 jours = 18 jours, soit parcourir la semaine courante puis cliquer "semaine suivante" 2 fois et refaire l'extraction.
-  - Attention à la navigation FullCalendar : il y a des boutons "semaine suivante" / "jour suivant" distincts — repérer le bon sélecteur.
-  - Gérer l'état `allEvents` pour accumuler sur les 3 semaines.
-  - Adapter le nom de fichier : actuellement `emploi-du-temps-cesi-semaine-${weekNumber}.ics` → probablement `emploi-du-temps-cesi-semaines-${n}-${n+2}.ics`.
-  - Notification de progression : indiquer "Semaine 1/3", "Semaine 2/3", etc.
-- Vérif : impact sur l'export Google Calendar (même flot d'événements, devrait marcher tel quel).
-- Pas d'impact sur `lib/ics-generator.js`, `popup.html`, `scripts/popup.js`, `scripts/background.js`.
+  - `extractFullWeek()` reste (1 semaine). Ajouter `extractMultipleWeeks(count)` qui boucle : extrait la semaine courante, clique "semaine suivante", répète.
+  - Repérer le sélecteur FullCalendar du bouton "semaine suivante" (distinct du "jour suivant" déjà utilisé).
+  - Accumuler les events sur toutes les semaines.
+  - Adapter le nom de fichier : `emploi-du-temps-cesi-semaines-${n}-${n+count-1}.ics`.
+  - Notification de progression : "Semaine 1/N", "Semaine 2/N", etc.
+  - Auto-export au chargement : inchangé (reste à 1 semaine par défaut).
+- Aucun impact sur `background.js` ni `lib/ics-generator.js`.
 
 ## Décisions
-- Semaines : courante + 2 suivantes (pas de précédente).
-- Pas de nouveau bouton — remplace le flux existant (auto-export + popup).
-- Timing : avec `LOAD_DELAY_MS=800`, on passe de ~5s (6 jours) à ~15-18s pour 18 jours + 2 transitions de semaine. Acceptable.
+- **Bouton additionnel, pas de remplacement** : l'utilisateur préfère garder le flux 1 semaine rapide et avoir un second bouton pour multi-semaines (validé 2026-04-22).
+- Nombre de semaines configurable via un input/select dans le popup, default 3.
+- Direction : courante + N-1 suivantes (pas de semaine passée).
+- Timing : avec `LOAD_DELAY_MS=800`, 3 semaines ≈ 15-18s. Documenter dans la notification.
 
 ## TODOs
-- [ ] Identifier le sélecteur du bouton "semaine suivante" dans FullCalendar côté ENT
-- [ ] Refactor `extractFullWeek()` → `extractMultipleWeeks(count)`
-- [ ] Adapter le nom de fichier + la notification de progression
-- [ ] Tester sur la vraie page ENT
-- [ ] Bump manifest + popup footer (probablement 1.2.0)
+- [ ] Identifier le sélecteur du bouton "semaine suivante" FullCalendar sur la page ENT
+- [ ] Ajouter `extractMultipleWeeks(count)` dans `content-script.js`
+- [ ] Étendre le message handler pour accepter `weeks`
+- [ ] Ajouter bouton + sélecteur dans `popup.html`
+- [ ] Handler correspondant dans `popup.js`
+- [ ] Tester sur la vraie page ENT (surtout le passage de semaine)
+- [ ] Bump manifest + popup footer
 - [ ] PR + merge + tag
