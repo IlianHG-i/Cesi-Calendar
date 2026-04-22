@@ -1,338 +1,240 @@
 # CESI Calendar Exporter
 
-Extension Chrome/Firefox pour **exporter automatiquement** votre emploi du temps CESI complet vers Google Calendar au format iCal (.ics).
+Extension Chrome / Firefox qui exporte automatiquement votre emploi du temps CESI (depuis `ent.cesi.fr`) dans le calendrier de votre choix : Google Calendar, Proton Calendar, Apple Calendar, ou sous forme d'image PNG.
+
+---
 
 ## Fonctionnalités
 
-- **Export automatique** dès que vous ouvrez la page emploi du temps
-- **Toute la semaine** exportée automatiquement (lundi à samedi)
-- **Navigation automatique** jour par jour pour extraire tous les événements
+- **Export automatique** d'un fichier `.ics` dès que vous ouvrez la page emploi du temps
+- **Export multi-semaines** : 1, 2 ou 3 semaines consécutives en un seul fichier
+- **Export direct vers Google Calendar** via OAuth2 (pas de fichier à importer manuellement)
+- **Export en image PNG** du calendrier pour le partager facilement
 - **Notification visuelle** en temps réel de la progression
-- **Prévention des doublons** : n'exporte pas si déjà fait il y a moins d'1 heure
-- **Un seul fichier** : tous les cours de la semaine dans un fichier `.ics`
-- Extraction complète : titre du cours, horaires, salle
+- **Prévention des doublons** : pas de réexport automatique si un export a déjà été fait il y a moins d'1 heure
+
+---
 
 ## Installation
 
 ### Chrome / Edge / Brave
 
-1. **Télécharger l'extension**
-   - Clonez ou téléchargez ce dépôt sur votre ordinateur
-   - Notez l'emplacement du dossier `cesi-calendar-exporter`
-
-2. **Activer le mode développeur**
-   - Ouvrez Chrome et allez dans `chrome://extensions/`
-   - Activez le "Mode développeur" (coin supérieur droit)
-
-3. **Charger l'extension**
-   - Cliquez sur "Charger l'extension non empaquetée"
-   - Sélectionnez le dossier `cesi-calendar-exporter`
-   - L'extension apparaît dans votre barre d'outils
+1. Téléchargez (ou clonez) ce dépôt
+2. Allez dans `chrome://extensions/`
+3. Activez le **Mode développeur** (en haut à droite)
+4. Cliquez sur **Charger l'extension non empaquetée**
+5. Sélectionnez le dossier `cesi-calendar-exporter`
 
 ### Firefox
 
-1. **Télécharger l'extension**
-   - Clonez ou téléchargez ce dépôt sur votre ordinateur
+1. Téléchargez (ou clonez) ce dépôt
+2. Allez dans `about:debugging#/runtime/this-firefox`
+3. Cliquez sur **Charger un module complémentaire temporaire**
+4. Sélectionnez le fichier `manifest.json` dans le dossier `cesi-calendar-exporter`
 
-2. **Charger temporairement**
-   - Ouvrez Firefox et allez dans `about:debugging#/runtime/this-firefox`
-   - Cliquez sur "Charger un module complémentaire temporaire"
-   - Sélectionnez le fichier `manifest.json` dans le dossier `cesi-calendar-exporter`
+> ⚠️ Sur Firefox, l'extension sera désinstallée à la fermeture du navigateur (limitation Firefox pour les extensions non signées).
 
-> **Note** : Sur Firefox, l'extension sera désinstallée à la fermeture du navigateur.
+---
 
 ## Utilisation
 
-### Export automatique (mode par défaut)
+### Export automatique (par défaut)
 
-C'est **ultra simple** :
+1. Connectez-vous sur [ent.cesi.fr](https://ent.cesi.fr)
+2. Allez dans **Mon emploi du temps**
+3. L'extension détecte la page, attend 2 secondes, puis télécharge automatiquement un `.ics` de la semaine affichée.
 
-1. **Connectez-vous** sur [ent.cesi.fr](https://ent.cesi.fr)
-2. **Ouvrez** la page "Mon emploi du temps"
-3. **C'est tout !** 🎉
+Une notification s'affiche en haut à droite pendant l'opération :
 
-L'extension :
-- ✅ Détecte automatiquement la page
-- ✅ Navigue jour par jour (lundi → samedi)
-- ✅ Extrait tous les événements
-- ✅ Génère un fichier `.ics`
-- ✅ Le télécharge automatiquement
-
-**Vous verrez une notification** en haut à droite :
 ```
-⏳ Navigation vers le début de la semaine...
-⏳ Extraction : Lundi (1/6)
-⏳ Extraction : Mardi (2/6)
-...
-✓ Export terminé ! 15 événements exportés
+⏳ Extraction de la semaine en cours...
+✓ Fichier iCal téléchargé ! 15 événements
 ```
 
-Le fichier téléchargé : `emploi-du-temps-cesi-semaine-48.ics`
+Nom du fichier : `emploi-du-temps-cesi-semaine-Sxx.ics`
 
-### Export manuel (si besoin)
+### Boutons du popup
 
-Vous pouvez aussi déclencher manuellement l'export :
-1. Cliquez sur l'icône de l'extension
-2. Cliquez sur "Exporter le jour affiché"
+Cliquez sur l'icône de l'extension pour accéder aux différents exports :
 
-### Importer dans Google Calendar
+| Bouton | Action |
+|---|---|
+| 📅 **Télécharger iCal (.ics)** | Exporte la semaine affichée en fichier iCal |
+| 📆 **Télécharger 2 semaines (.ics)** | Exporte la semaine affichée + la suivante |
+| 📆 **Télécharger 3 semaines (.ics)** | Exporte la semaine affichée + les 2 suivantes |
+| 🖼️ **Télécharger en image (.png)** | Capture le calendrier en image PNG haute résolution |
+| 🔄 **Exporter vers Google Calendar** | Pousse les événements directement dans votre Google Calendar (via OAuth) |
 
-#### Méthode 1 : Import manuel (recommandé)
+> 💡 Pour les exports multi-semaines, l'extension navigue automatiquement vers les semaines suivantes puis revient à la semaine de départ — pas besoin de faire quoi que ce soit.
+
+---
+
+## Exporter vers Google Calendar
+
+Le bouton **🔄 Exporter vers Google Calendar** pousse les événements directement dans votre agenda Google, sans passer par un fichier à télécharger.
+
+### Premier usage
+
+1. Cliquez sur le bouton
+2. Une popup Google s'ouvre → connectez-vous avec votre compte
+3. Google affiche **"Google n'a pas vérifié cette application"** — c'est normal (l'app n'est pas publiée sur le Chrome Web Store)
+   - Cliquez sur **Avancé**
+   - Cliquez sur **Accéder à CESI Calendar Exporter (non sécurisé)**
+4. Autorisez l'accès à votre Google Calendar
+5. Les événements de la semaine se créent automatiquement dans votre calendrier principal
+
+### Au prochain usage
+
+Plus rien à faire : l'autorisation est mémorisée. Un clic suffit.
+
+### Besoin d'ajouter un utilisateur ?
+
+Le projet OAuth est en mode **Testing**. Par défaut, seules les personnes listées comme "utilisateurs de test" peuvent utiliser cette voie. Le mainteneur du projet doit ajouter votre email dans la Google Cloud Console (limite 100 users). Contactez-le.
+
+---
+
+## Importer manuellement un `.ics`
+
+Si vous préférez télécharger le `.ics` puis l'importer vous-même, ou si vous utilisez un autre calendrier que Google :
+
+### Importer dans Google Calendar (sans OAuth)
 
 1. Ouvrez [Google Calendar](https://calendar.google.com)
-2. Cliquez sur l'icône ⚙️ → **Paramètres**
-3. Dans le menu de gauche : **Importer et exporter**
-4. Cliquez sur **Sélectionner un fichier sur votre ordinateur**
-5. Sélectionnez le fichier `.ics` téléchargé
-6. Choisissez le calendrier de destination
-7. Cliquez sur **Importer**
-
-#### Méthode 2 : Créer un calendrier dédié (recommandé)
-
-Pour mieux organiser vos cours :
-
-1. Dans Google Calendar, créez un nouveau calendrier nommé "CESI"
-2. Lors de l'import, sélectionnez ce calendrier
-3. Vous pouvez activer/désactiver l'affichage facilement
-4. Personnalisez la couleur pour distinguer vos cours
+2. ⚙️ (en haut à droite) → **Paramètres**
+3. Menu gauche → **Importer et exporter**
+4. **Sélectionner un fichier sur votre ordinateur** → choisissez votre `.ics`
+5. Choisissez le calendrier de destination → **Importer**
 
 ### Import dans Proton Calendar
 
-Proton Calendar ne propose **pas d'API publique** pour insérer des événements depuis une extension. Le bouton "Proton Calendar (.ics)" télécharge donc un fichier que tu importes ensuite manuellement — c'est simple et ça prend 30 secondes.
+Proton Calendar n'a pas d'API publique pour l'insertion directe. Méthode manuelle :
 
-1. Clique sur **Proton Calendar (.ics)** dans le popup de l'extension → le fichier se télécharge
-2. Ouvre [Proton Calendar](https://calendar.proton.me) dans ton navigateur et connecte-toi
-3. En haut à droite, clique sur **Paramètres** (⚙️) → **Tous les paramètres de Proton Calendar**
-4. Dans le menu de gauche, ouvre l'onglet **Calendriers**
-5. Clique sur **Importer un calendrier**
-6. Sélectionne le fichier `.ics` téléchargé
-7. Choisis le calendrier de destination (crée un calendrier "CESI" si tu veux une vue isolée)
-8. Valide l'import
+1. Téléchargez le `.ics` via le bouton iCal de l'extension
+2. Ouvrez [Proton Calendar](https://calendar.proton.me) et connectez-vous
+3. ⚙️ **Paramètres** → **Tous les paramètres de Proton Calendar**
+4. Onglet **Calendriers** → **Importer un calendrier**
+5. Sélectionnez le fichier `.ics`, choisissez la destination, validez
 
-> **Astuce** : Proton déduplique les événements à l'import via leur UID — tu peux réimporter un `.ics` à jour sans créer de doublons.
+> 💡 Proton déduplique les événements via leur UID — vous pouvez réimporter un `.ics` mis à jour sans créer de doublons.
 
 ### Import dans Apple Calendar
 
-Apple Calendar / iCloud non plus n'a pas d'API web. Même méthode que Proton : téléchargement du `.ics` + import manuel.
-
-**Sur Mac**
-
-1. Clique sur **Apple Calendar (.ics)** dans le popup de l'extension
-2. Ouvre l'application **Calendrier**
+**Sur Mac :**
+1. Téléchargez le `.ics` via le bouton iCal
+2. Ouvrez l'app **Calendrier**
 3. Menu **Fichier** → **Importer…**
-4. Sélectionne le fichier `.ics` téléchargé
-5. Dans la boîte de dialogue, choisis le calendrier de destination et clique **OK**
+4. Sélectionnez le fichier, choisissez la destination, validez
 
-**Sur iPhone / iPad**
+**Sur iPhone / iPad :**
+1. Envoyez-vous le `.ics` par AirDrop, mail ou iCloud Drive
+2. Ouvrez-le depuis Fichiers ou Mail
+3. iOS propose **Ajouter tous les événements** → choisissez le calendrier
 
-1. Envoie-toi le fichier `.ics` par AirDrop, mail ou via iCloud Drive
-2. Ouvre le fichier depuis l'app **Fichiers** ou **Mail**
-3. iOS propose automatiquement **Ajouter tous les événements** → choisis le calendrier cible
+> 💡 Créez un calendrier dédié "CESI" dans n'importe lequel de ces services pour isoler vos cours et pouvoir les masquer d'un clic.
 
-**Via iCloud.com**
+---
 
-1. Ouvre [iCloud Calendar](https://www.icloud.com/calendar/) dans ton navigateur
-2. Il n'y a **pas** de bouton d'import direct sur l'interface web iCloud. Utilise la méthode Mac ci-dessus.
-
-> **Astuce** : Crée un calendrier dédié "CESI" dans l'app Calendrier pour isoler les cours et pouvoir les masquer d'un clic.
-
-## Configuration
-
-### Prévention des doublons
-
-Par défaut, l'extension **ne réexporte pas** si un export a déjà été fait il y a moins d'**1 heure**.
-
-Pour forcer un nouvel export :
-- Utilisez le bouton manuel de l'extension
-- Ou attendez 1 heure
-
-Pour modifier ce délai, éditez `content-script.js` :
-```javascript
-const CONFIG = {
-    EXPORT_DELAY_HOURS: 1, // Modifiez cette valeur
-    ...
-};
-```
+## Paramètres
 
 ### Désactiver l'export automatique
 
-Si vous voulez uniquement l'export manuel :
+Si vous voulez uniquement déclencher l'export via le popup, éditez `scripts/content-script.js` à la toute fin du fichier :
 
-1. Éditez `content-script.js`
-2. Commentez les dernières lignes :
 ```javascript
+// Commentez ces lignes :
 // setTimeout(() => {
 //     autoExport();
 // }, 2000);
 ```
 
-## Structure du projet
+### Modifier le délai anti-doublon
 
-```
-cesi-calendar-exporter/
-├── manifest.json              # Configuration de l'extension
-├── popup.html                 # Interface utilisateur (export manuel)
-├── icons/                     # Icônes de l'extension
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
-├── scripts/
-│   ├── content-script.js      # Export automatique + extraction
-│   └── popup.js               # Logique du popup
-├── styles/
-│   └── popup.css              # Styles de l'interface
-├── lib/
-│   └── ics-generator.js       # Générateur de fichiers iCal
-└── README.md                  # Ce fichier
+Par défaut, l'extension ne réexporte pas automatiquement si un export a été fait il y a moins d'1 heure. Dans `scripts/content-script.js` :
+
+```javascript
+const CONFIG = {
+    EXPORT_DELAY_HOURS: 1, // Modifier cette valeur
+    ...
+};
 ```
 
-## Comment ça marche ?
-
-### Architecture technique
-
-1. **Détection** : Le content script se charge automatiquement sur `mon-emploi-du-temps`
-2. **Attente** : Attend 2 secondes que le calendrier FullCalendar soit complètement chargé
-3. **Vérification** : Vérifie si un export récent existe déjà (localStorage)
-4. **Navigation** : Navigue automatiquement vers le lundi de la semaine
-5. **Extraction** : Pour chaque jour (lundi → samedi) :
-   - Extrait les événements affichés
-   - Navigue au jour suivant (800ms entre chaque)
-6. **Compilation** : Rassemble tous les événements
-7. **Génération** : Crée un fichier iCal standard
-8. **Téléchargement** : Déclenche automatiquement le téléchargement
-
-**Durée totale** : ~6-8 secondes pour toute la semaine
+---
 
 ## Dépannage
 
 ### L'export ne se déclenche pas
 
-**Causes possibles** :
-1. Vous avez déjà exporté il y a moins d'1 heure
-2. Le calendrier ne s'est pas chargé correctement
-
-**Solutions** :
+- Attendez 2-3 secondes après le chargement de la page
+- Vérifiez que vous êtes bien sur `ent.cesi.fr/mon-emploi-du-temps`
 - Rafraîchissez la page (F5)
-- Attendez 1 heure ou utilisez l'export manuel
-- Vérifiez la console (F12) pour les erreurs
+- Ouvrez la console (F12) et cherchez les logs `[CESI Exporter]`
 
-### L'export s'arrête en cours de route
+### "Export déjà effectué récemment"
 
-**Cause** : Connexion lente ou calendrier qui met du temps à charger
+Normal. L'extension évite de spammer des téléchargements. Pour forcer un nouvel export, utilisez le popup de l'extension.
 
-**Solutions** :
-- Augmentez le délai dans `content-script.js` :
-```javascript
-LOAD_DELAY_MS: 1200, // Au lieu de 800
-```
-- Réessayez sur une meilleure connexion
+### Google Calendar : "bad client id"
 
-### Événements manquants
+Vérifiez dans `chrome://extensions/` que l'ID de l'extension est bien `acnjjemnlheffchiaiplnfpcfenjnmcb`. Si ce n'est pas le cas, le champ `key` du `manifest.json` n'a pas été pris en compte — supprimez l'extension et rechargez-la depuis le dossier.
 
-**Cause** : Certains jours n'ont pas de cours
+### Le PNG contient des traits parasites
 
-**Solution** : C'est normal ! L'extension extrait ce qui est affiché. Les jours sans cours ne génèrent pas d'événements.
+L'extension filtre les lignes internes de FullCalendar. Si vous voyez quand même des traits inhabituels, ouvrez une issue avec une capture.
 
-### Message "Aucun événement trouvé"
+### Les horaires sont décalés
 
-**Solutions** :
-1. Vérifiez que vous avez des cours cette semaine
-2. Attendez que le calendrier se charge complètement
-3. Changez de semaine avec les flèches ← →
-4. Rechargez l'extension dans `chrome://extensions/`
-
-### Les horaires sont décalés dans Google Calendar
-
-**Solutions** :
-1. Vérifiez que votre fuseau horaire est "Europe/Paris" dans Google Calendar
-2. Réexportez le fichier .ics
-3. Supprimez les anciens événements et réimportez
-
-## Limitations
-
-- **Export hebdomadaire uniquement** : L'extension exporte uniquement la semaine affichée
-- **Lundi à samedi** : Le dimanche n'est pas extrait (généralement pas de cours)
-- **Données limitées** : Seuls le titre, les horaires et la salle sont exportés
-- **Pas de mise à jour automatique** : Si l'emploi du temps change, vous devez réexporter
-
-## Améliorations futures
-
-- [ ] Export de plusieurs semaines consécutives
-- [ ] Synchronisation automatique avec Google Calendar API (sans téléchargement)
-- [ ] Détection automatique des changements d'emploi du temps
-- [ ] Support des événements récurrents
-- [ ] Export vers d'autres calendriers (Outlook, Apple Calendar)
-- [ ] Options de configuration dans le popup
-
-## FAQ
-
-### Mes identifiants sont-ils stockés ?
-
-Non, l'extension n'a accès qu'à la page d'emploi du temps une fois que vous êtes déjà connecté. Aucune donnée d'authentification n'est stockée ou transmise.
-
-### L'extension fonctionne-t-elle hors ligne ?
-
-Non, vous devez être connecté à ent.cesi.fr pour extraire les données.
-
-### Puis-je exporter plusieurs semaines d'un coup ?
-
-Pas pour le moment. Vous devez changer de semaine sur le site puis attendre le nouvel export automatique (ou le déclencher manuellement).
-
-### Les événements sont-ils mis à jour automatiquement dans Google Calendar ?
-
-Non, vous devez réexporter et réimporter manuellement à chaque modification de l'emploi du temps.
-
-### Combien de fois l'extension exporte-t-elle ?
-
-Une seule fois par heure par défaut. Si vous rechargez la page 10 fois, elle n'exportera qu'une fois.
-
-### L'extension est-elle officielle ?
-
-Non, il s'agit d'un projet personnel non affilié au CESI. Utilisez-la à vos propres risques.
-
-### Je veux désactiver l'export automatique, comment faire ?
-
-Modifiez le fichier `content-script.js` et commentez les dernières lignes (instructions dans la section Configuration).
-
-## Contribution
-
-Les contributions sont les bienvenues ! N'hésitez pas à :
-
-- Signaler des bugs
-- Proposer des améliorations
-- Soumettre des pull requests
-
-## Changelog
-
-### v2.0 (2024-11-24)
-- ✨ Export automatique au chargement de la page
-- ✨ Export de toute la semaine (lundi à samedi)
-- ✨ Navigation automatique jour par jour
-- ✨ Notification visuelle en temps réel
-- ✨ Prévention des exports en double
-- 🔧 Refonte complète du content script
-
-### v1.0 (2024-11-24)
-- 🎉 Version initiale
-- Export manuel jour par jour
-
-## Licence
-
-Ce projet est sous licence MIT. Vous êtes libre de l'utiliser, le modifier et le distribuer.
-
-## Auteur
-
-Développé pour faciliter la vie des étudiants CESI.
-
-## Support
-
-Pour toute question ou problème :
-1. Consultez la section [Dépannage](#dépannage)
-2. Vérifiez la console navigateur (F12)
-3. Créez une issue avec un maximum de détails
+Vérifiez que votre calendrier utilise bien le fuseau horaire **Europe/Paris**.
 
 ---
 
-**Bon courage pour vos études ! 🎓**
+## Architecture
 
-*Export automatique = Plus de temps pour ce qui compte vraiment !*
+Trois contextes communiquent via `chrome.runtime` :
+
+- **`scripts/content-script.js`** — runs on `ent.cesi.fr/mon-emploi-du-temps*`. Extrait les événements du DOM FullCalendar, gère la navigation multi-semaines, génère les fichiers iCal/PNG et pilote l'export Google Calendar.
+- **`scripts/background.js`** — service worker qui gère l'OAuth2 Google (obtention et rafraîchissement du token).
+- **`scripts/popup.js` + `popup.html`** — UI du popup, émet les messages vers le content script.
+
+**Bibliothèques bundlées :**
+- `lib/ics-generator.js` — génération de fichiers iCal (RFC 5545)
+- `lib/html2canvas.min.js` — capture DOM → canvas → PNG (1.4.1, MIT)
+
+---
+
+## Pour les développeurs / forks
+
+Si vous forkez ce projet et voulez un `client_id` OAuth2 à vous :
+
+1. Suivez les étapes de [`GOOGLE_SETUP.md`](./GOOGLE_SETUP.md)
+2. Remplacez le `client_id` dans `manifest.json` par le vôtre
+3. Générez votre propre paire de clés pour le champ `key` (voir `GOOGLE_SETUP.md`) — l'ID d'extension changera
+
+---
+
+## Limitations connues
+
+- **Mode Testing OAuth** : le warning "application non vérifiée" persiste tant que l'app n'est pas publiée sur le Chrome Web Store et vérifiée par Google.
+- **7 jours de validité du refresh token** : en mode Testing, le token Google expire après 7 jours d'inactivité → nouvelle autorisation nécessaire.
+- **Lundi à samedi uniquement** : le dimanche n'est pas extrait (pas de cours CESI).
+- **Pas de mise à jour automatique** : si l'emploi du temps change côté CESI, il faut réexporter.
+
+---
+
+## Contribution
+
+Les issues et pull requests sont les bienvenus. Pour toute question ou bug, créez une issue avec :
+- Navigateur et version
+- Étapes pour reproduire
+- Logs de la console (F12 → onglet Console)
+
+---
+
+## Licence
+
+MIT. Voir le code pour les bibliothèques tierces (html2canvas).
+
+---
+
+## Auteur
+
+Projet non affilié au CESI, développé pour simplifier la vie des étudiants.
