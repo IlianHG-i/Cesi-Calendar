@@ -255,6 +255,56 @@
     }
 
     /**
+     * Clique sur un bouton de navigation FullCalendar et attend le rechargement
+     * @param {string} selector - Sélecteur du bouton (.fc-next-button ou .fc-prev-button)
+     */
+    async function clickNavButton(selector) {
+        const btn = document.querySelector(selector);
+        if (!btn) {
+            throw new Error(`Bouton de navigation introuvable: ${selector}`);
+        }
+        btn.click();
+        // Attendre que la vue soit mise à jour
+        await new Promise(r => setTimeout(r, CONFIG.LOAD_DELAY_MS + 400));
+        await waitForCalendar();
+    }
+
+    /**
+     * Extrait plusieurs semaines consécutives en cliquant sur "semaine suivante".
+     * Revient à la semaine de départ une fois terminé.
+     * @param {number} count - Nombre de semaines à extraire (semaine courante + N-1 suivantes)
+     * @returns {Promise<{events: Array, weekNumbers: string[]}>}
+     */
+    async function extractMultipleWeeks(count) {
+        const multiWeekEvents = [];
+        const weekNumbers = [];
+
+        for (let w = 0; w < count; w++) {
+            updateNotification(`Extraction semaine ${w + 1}/${count}...`, 'info');
+
+            const weekTitle = document.querySelector('.fc-title-header')?.textContent.trim() || '';
+            const weekNumber = weekTitle.match(/S(\d+)/)?.[1];
+            if (weekNumber) weekNumbers.push(weekNumber);
+
+            const weekEvents = extractAllWeekEvents();
+            multiWeekEvents.push(...weekEvents);
+
+            if (w < count - 1) {
+                await clickNavButton('.fc-next-button');
+            }
+        }
+
+        // Revenir au point de départ
+        updateNotification('Retour à la semaine de départ...', 'info');
+        for (let w = 0; w < count - 1; w++) {
+            await clickNavButton('.fc-prev-button');
+        }
+
+        allEvents = multiWeekEvents;
+        return { events: multiWeekEvents, weekNumbers };
+    }
+
+    /**
      * Génère le contenu iCal au format RFC 5545
      */
     function generateICS(events) {
@@ -461,11 +511,12 @@
      * Fonction principale - Lance l'export automatique ou manuel
      * @param {boolean} forceExport - Si true, bypass la vérification de temps (pour export manuel)
      * @param {string} format - Format d'export: 'ics' ou 'google'
+     * @param {number} weeks - Nombre de semaines à exporter (1 = semaine courante uniquement)
      */
-    async function autoExport(forceExport = false, format = 'ics') {
+    async function autoExport(forceExport = false, format = 'ics', weeks = 1) {
         try {
             const exportType = forceExport ? 'manuel' : 'automatique';
-            console.log(`[CESI Exporter] Démarrage de l'export ${exportType} (format: ${format})`);
+            console.log(`[CESI Exporter] Démarrage de l'export ${exportType} (format: ${format}, semaines: ${weeks})`);
 
             // Vérifier si un export récent existe déjà (sauf si forcé par l'utilisateur)
             if (!forceExport && !shouldExport()) {
@@ -478,25 +529,37 @@
             // Attendre que le calendrier soit chargé
             await waitForCalendar();
 
-            // Extraire toute la semaine
-            const events = await extractFullWeek();
+            // Extraire une ou plusieurs semaines
+            let events;
+            let weekNumbers = [];
+            if (weeks > 1) {
+                const result = await extractMultipleWeeks(weeks);
+                events = result.events;
+                weekNumbers = result.weekNumbers;
+            } else {
+                events = await extractFullWeek();
+                const weekTitle = document.querySelector('.fc-title-header')?.textContent.trim() || '';
+                const wn = weekTitle.match(/S(\d+)/)?.[1];
+                if (wn) weekNumbers = [wn];
+            }
 
             if (events.length === 0) {
-                updateNotification('Aucun événement trouvé cette semaine', 'error');
+                updateNotification('Aucun événement trouvé', 'error');
                 hideNotification(3000);
                 return;
             }
 
-            // Récupérer le numéro de semaine pour le nom de fichier
-            const weekTitle = document.querySelector('.fc-title-header')?.textContent.trim() || '';
-            const weekNumber = weekTitle.match(/S(\d+)/)?.[1] || new Date().getWeek();
+            // Construire le suffixe du nom de fichier
+            const fileSuffix = weekNumbers.length > 1
+                ? `semaines-S${weekNumbers[0]}-S${weekNumbers[weekNumbers.length - 1]}`
+                : `semaine-${weekNumbers[0] || new Date().getWeek()}`;
 
             // Exporter selon le format demandé
             if (format === 'ics') {
                 // Export iCal
                 updateNotification('Génération du fichier iCal...', 'info');
                 const icsContent = generateICS(events);
-                const filename = `emploi-du-temps-cesi-semaine-${weekNumber}.ics`;
+                const filename = `emploi-du-temps-cesi-${fileSuffix}.ics`;
                 downloadICS(icsContent, filename);
 
                 // Notification de succès
@@ -533,9 +596,10 @@
         if (request.action === 'extractEvents') {
             // Récupérer le format demandé (par défaut: 'ics')
             const format = request.format || 'ics';
+            const weeks = Math.max(1, parseInt(request.weeks, 10) || 1);
 
             // Forcer l'export (true) pour bypass la restriction de temps
-            autoExport(true, format)
+            autoExport(true, format, weeks)
                 .then(() => {
                     sendResponse({
                         success: true,

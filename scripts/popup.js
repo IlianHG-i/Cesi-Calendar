@@ -8,6 +8,8 @@
 
     // Éléments DOM
     const exportIcsBtn = document.getElementById('exportIcsBtn');
+    const exportMultiBtn = document.getElementById('exportMultiBtn');
+    const weeksSelect = document.getElementById('weeksSelect');
     const exportGoogleBtn = document.getElementById('exportGoogleBtn');
     const statusDiv = document.getElementById('status');
     const statusMessage = statusDiv.querySelector('.status-message');
@@ -96,6 +98,8 @@
      */
     function setButtonsState(enabled) {
         exportIcsBtn.disabled = !enabled;
+        exportMultiBtn.disabled = !enabled;
+        weeksSelect.disabled = !enabled;
         exportGoogleBtn.disabled = !enabled;
     }
 
@@ -133,9 +137,9 @@
     /**
      * Extrait les événements depuis la page
      */
-    async function extractEvents(tabId, format) {
+    async function extractEvents(tabId, format, weeks = 1) {
         return new Promise((resolve, reject) => {
-            chrome.tabs.sendMessage(tabId, { action: 'extractEvents', format: format }, (response) => {
+            chrome.tabs.sendMessage(tabId, { action: 'extractEvents', format: format, weeks: weeks }, (response) => {
                 if (chrome.runtime.lastError) {
                     const errorMsg = chrome.runtime.lastError.message;
 
@@ -193,8 +197,9 @@
     /**
      * Gère le clic sur un bouton d'export
      * @param {string} format - Format d'export: 'ics' ou 'google'
+     * @param {number} weeks - Nombre de semaines à exporter (default 1)
      */
-    async function handleExport(format) {
+    async function handleExport(format, weeks = 1) {
         try {
             hideError();
             hideInfo();
@@ -208,13 +213,14 @@
             };
             const formatLabel = formatLabels[format] || format;
 
-            showStatus('loading', `Extraction de l'emploi du temps...`);
+            const scopeLabel = weeks > 1 ? ` (${weeks} semaines)` : '';
+            showStatus('loading', `Extraction de l'emploi du temps${scopeLabel}...`);
 
             // Vérifier l'onglet actif
             const tab = await checkCurrentTab();
 
             // Extraire les événements avec le format demandé
-            const response = await extractEvents(tab.id, format);
+            const response = await extractEvents(tab.id, format, weeks);
 
             if (!response.events || response.events.length === 0) {
                 throw new Error('Aucun événement trouvé dans l\'emploi du temps');
@@ -273,8 +279,12 @@
         }
 
         // Écouter les clics sur les boutons
-        exportIcsBtn.addEventListener('click', () => handleExport('ics'));
-        exportGoogleBtn.addEventListener('click', () => handleExport('google'));
+        exportIcsBtn.addEventListener('click', () => handleExport('ics', 1));
+        exportMultiBtn.addEventListener('click', () => {
+            const weeks = parseInt(weeksSelect.value, 10) || 3;
+            handleExport('ics', weeks);
+        });
+        exportGoogleBtn.addEventListener('click', () => handleExport('google', 1));
     }
 
     // Démarrer quand le DOM est prêt

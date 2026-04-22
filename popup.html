@@ -33,6 +33,17 @@
                     <span class="btn-text">Télécharger iCal (.ics)</span>
                 </button>
 
+                <div class="multi-week-row" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                    <button id="exportMultiBtn" class="btn btn-primary" style="flex: 1;">
+                        <span class="btn-icon">📆</span>
+                        <span class="btn-text">Exporter plusieurs semaines</span>
+                    </button>
+                    <select id="weeksSelect" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px;">
+                        <option value="2">2 sem.</option>
+                        <option value="3" selected>3 sem.</option>
+                    </select>
+                </div>
+
                 <button id="exportGoogleBtn" class="btn btn-google" style="margin-top: 10px;">
                     <span class="btn-icon">🔄</span>
                     <span class="btn-text">Exporter vers Google Calendar</span>
@@ -72,7 +83,7 @@
         </main>
 
         <footer>
-            <p class="version">v1.1.0</p>
+            <p class="version">v1.2.0</p>
         </footer>
     </div>
 
