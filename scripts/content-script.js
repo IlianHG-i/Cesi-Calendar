@@ -407,7 +407,23 @@
             backgroundColor: '#ffffff',
             scale: 2,
             useCORS: true,
-            logging: false
+            logging: false,
+            onclone: (clonedDoc) => {
+                // html2canvas rend visibles les traits internes de FullCalendar qui sont
+                // normalement très discrets. On les neutralise dans le DOM cloné.
+                const style = clonedDoc.createElement('style');
+                style.textContent = `
+                    .fc-minor .fc-widget-content,
+                    .fc-minor .fc-axis { border-top: 0 !important; }
+                    .fc-content-skeleton td,
+                    .fc-content-skeleton table,
+                    .fc-content-skeleton tr { border: 0 !important; }
+                    .fc-bg td.fc-widget-content { border-color: #e0e0e0 !important; }
+                    .fc-divider,
+                    .fc-head .fc-divider { display: none !important; }
+                `;
+                clonedDoc.head.appendChild(style);
+            }
         });
 
         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
