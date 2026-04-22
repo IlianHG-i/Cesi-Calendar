@@ -100,7 +100,7 @@
         exportIcsBtn.disabled = !enabled;
         exportTwoWeeksBtn.disabled = !enabled;
         exportThreeWeeksBtn.disabled = !enabled;
-        exportGoogleBtn.disabled = !enabled;
+        // exportGoogleBtn reste désactivé en permanence (en travaux)
     }
 
     /**
@@ -282,7 +282,7 @@
         exportIcsBtn.addEventListener('click', () => handleExport('ics', 1));
         exportTwoWeeksBtn.addEventListener('click', () => handleExport('ics', 2));
         exportThreeWeeksBtn.addEventListener('click', () => handleExport('ics', 3));
-        exportGoogleBtn.addEventListener('click', () => handleExport('google', 1));
+        // exportGoogleBtn en travaux, pas de handler
     }
 
     // Démarrer quand le DOM est prêt
