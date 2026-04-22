@@ -100,7 +100,7 @@
         exportIcsBtn.disabled = !enabled;
         exportTwoWeeksBtn.disabled = !enabled;
         exportThreeWeeksBtn.disabled = !enabled;
-        // exportGoogleBtn reste désactivé en permanence (en travaux)
+        exportGoogleBtn.disabled = !enabled;
     }
 
     /**
@@ -253,7 +253,14 @@
         } catch (error) {
             console.error('[CESI Exporter] Erreur:', error);
             hideStatus();
-            showError(error.message);
+
+            // Message enrichi si OAuth Google échoue (client_id probablement pas configuré)
+            let message = error.message;
+            const msgLower = message.toLowerCase();
+            if (format === 'google' && (msgLower.includes('bad client id') || msgLower.includes('oauth') || msgLower.includes('client_id') || msgLower.includes('token'))) {
+                message = `${error.message}\n\n⚠️ L'export Google nécessite un client_id OAuth2 configuré.\nVoir GOOGLE_SETUP.md dans le dépôt pour la procédure.`;
+            }
+            showError(message);
             setButtonsState(true);
 
             // Afficher la help-box si c'est une erreur de connexion
@@ -282,7 +289,7 @@
         exportIcsBtn.addEventListener('click', () => handleExport('ics', 1));
         exportTwoWeeksBtn.addEventListener('click', () => handleExport('ics', 2));
         exportThreeWeeksBtn.addEventListener('click', () => handleExport('ics', 3));
-        // exportGoogleBtn en travaux, pas de handler
+        exportGoogleBtn.addEventListener('click', () => handleExport('google', 1));
     }
 
     // Démarrer quand le DOM est prêt
