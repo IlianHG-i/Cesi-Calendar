@@ -10,6 +10,7 @@
     const exportIcsBtn = document.getElementById('exportIcsBtn');
     const exportTwoWeeksBtn = document.getElementById('exportTwoWeeksBtn');
     const exportThreeWeeksBtn = document.getElementById('exportThreeWeeksBtn');
+    const exportPngBtn = document.getElementById('exportPngBtn');
     const exportGoogleBtn = document.getElementById('exportGoogleBtn');
     const statusDiv = document.getElementById('status');
     const statusMessage = statusDiv.querySelector('.status-message');
@@ -100,6 +101,7 @@
         exportIcsBtn.disabled = !enabled;
         exportTwoWeeksBtn.disabled = !enabled;
         exportThreeWeeksBtn.disabled = !enabled;
+        exportPngBtn.disabled = !enabled;
         // exportGoogleBtn reste désactivé en permanence (en travaux)
     }
 
@@ -209,6 +211,7 @@
             // Messages selon le format
             const formatLabels = {
                 'ics': 'iCal',
+                'png': 'image PNG',
                 'google': 'Google Calendar'
             };
             const formatLabel = formatLabels[format] || format;
@@ -282,6 +285,7 @@
         exportIcsBtn.addEventListener('click', () => handleExport('ics', 1));
         exportTwoWeeksBtn.addEventListener('click', () => handleExport('ics', 2));
         exportThreeWeeksBtn.addEventListener('click', () => handleExport('ics', 3));
+        exportPngBtn.addEventListener('click', () => handleExport('png', 1));
         // exportGoogleBtn en travaux, pas de handler
     }
 

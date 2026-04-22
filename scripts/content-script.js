@@ -389,6 +389,77 @@
     }
 
     /**
+     * Capture la vue calendrier en PNG via html2canvas et déclenche le téléchargement.
+     * @param {string} filename - Nom du fichier à télécharger
+     */
+    async function downloadCalendarImage(filename) {
+        if (typeof html2canvas !== 'function') {
+            throw new Error('html2canvas non chargé');
+        }
+        const target = document.querySelector('.fc-view');
+        if (!target) {
+            throw new Error('Vue calendrier introuvable (.fc-view)');
+        }
+
+        updateNotification('Génération de l\'image...', 'info');
+
+        const canvas = await html2canvas(target, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            onclone: (clonedDoc) => {
+                // html2canvas rend visibles les traits internes de FullCalendar qui sont
+                // normalement très discrets. On les neutralise dans le DOM cloné.
+                const style = clonedDoc.createElement('style');
+                style.textContent = `
+                    .fc-minor .fc-widget-content,
+                    .fc-minor .fc-axis { border-top: 0 !important; }
+                    .fc-content-skeleton td,
+                    .fc-content-skeleton table,
+                    .fc-content-skeleton tr { border: 0 !important; }
+                    .fc-bg td.fc-widget-content { border-color: #e0e0e0 !important; }
+                    .fc-divider,
+                    .fc-head .fc-divider { display: none !important; }
+                `;
+                clonedDoc.head.appendChild(style);
+
+                // Supprimer la section "Soirée" en bas du calendrier (grille/bande supplémentaire).
+                // On cherche tout élément qui contient uniquement ce libellé et on masque son conteneur.
+                clonedDoc.querySelectorAll('*').forEach(el => {
+                    const txt = (el.childNodes.length === 1 && el.firstChild.nodeType === Node.TEXT_NODE)
+                        ? el.textContent.trim()
+                        : '';
+                    if (txt === 'Soirée') {
+                        // Remonter jusqu'au parent qui englobe toute la ligne/section Soirée
+                        let container = el;
+                        for (let i = 0; i < 6 && container.parentElement; i++) {
+                            container = container.parentElement;
+                            const tag = container.tagName;
+                            if (tag === 'TR' || (container.classList && (container.classList.contains('fc-row') || container.classList.contains('fc-time-grid') || container.classList.contains('fc-day-grid'))) ) {
+                                break;
+                            }
+                        }
+                        container.style.display = 'none';
+                    }
+                });
+            }
+        });
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('Échec de la conversion en PNG');
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+    }
+
+    /**
      * Exporte les événements directement vers Google Calendar via API
      * @param {Array} events - Tableau d'événements à exporter
      * @returns {Promise<Object>} Résultat de l'export
@@ -543,7 +614,7 @@
                 if (wn) weekNumbers = [wn];
             }
 
-            if (events.length === 0) {
+            if (events.length === 0 && format !== 'png') {
                 updateNotification('Aucun événement trouvé', 'error');
                 hideNotification(3000);
                 return;
@@ -570,6 +641,13 @@
                 // Export vers Google Calendar via API
                 await exportToGoogleCalendar(events);
                 // Les notifications sont gérées dans exportToGoogleCalendar()
+
+            } else if (format === 'png') {
+                // Export image PNG via html2canvas
+                const filename = `emploi-du-temps-cesi-${fileSuffix}.png`;
+                await downloadCalendarImage(filename);
+                updateNotification(`✓ Image PNG téléchargée !`, 'success');
+                hideNotification(4000);
 
             } else {
                 throw new Error(`Format d'export inconnu: ${format}`);
