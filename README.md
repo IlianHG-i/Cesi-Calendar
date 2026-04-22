@@ -77,8 +77,6 @@ Vous pouvez aussi déclencher manuellement l'export :
 
 ### Importer dans Google Calendar
 
-> **Astuce** : l'extension propose aussi un bouton **"Exporter vers Google Calendar"** qui pousse les événements directement via l'API Google — sans fichier à télécharger. Cette voie nécessite de configurer ton propre client_id OAuth2 (voir [GOOGLE_SETUP.md](./GOOGLE_SETUP.md) dans le dépôt). Sinon, utilise la méthode d'import manuel ci-dessous.
-
 #### Méthode 1 : Import manuel (recommandé)
 
 1. Ouvrez [Google Calendar](https://calendar.google.com)
