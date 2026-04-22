@@ -102,7 +102,7 @@
         exportTwoWeeksBtn.disabled = !enabled;
         exportThreeWeeksBtn.disabled = !enabled;
         exportPngBtn.disabled = !enabled;
-        // exportGoogleBtn reste désactivé en permanence (en travaux)
+        exportGoogleBtn.disabled = !enabled;
     }
 
     /**
@@ -286,7 +286,7 @@
         exportTwoWeeksBtn.addEventListener('click', () => handleExport('ics', 2));
         exportThreeWeeksBtn.addEventListener('click', () => handleExport('ics', 3));
         exportPngBtn.addEventListener('click', () => handleExport('png', 1));
-        // exportGoogleBtn en travaux, pas de handler
+        exportGoogleBtn.addEventListener('click', () => handleExport('google', 1));
     }
 
     // Démarrer quand le DOM est prêt
