@@ -255,59 +255,6 @@
     }
 
     /**
-     * Génère le fichier texte formaté
-     */
-    function generateTextFile(events) {
-        // Grouper les événements par date
-        const eventsByDate = {};
-
-        events.forEach(event => {
-            const dateKey = event.start.toLocaleDateString('fr-FR');
-            if (!eventsByDate[dateKey]) {
-                eventsByDate[dateKey] = {
-                    date: event.start,
-                    events: []
-                };
-            }
-            eventsByDate[dateKey].events.push(event);
-        });
-
-        // Construire le texte
-        const lines = [];
-        const dayNames = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-
-        // Trier les dates
-        const sortedDates = Object.keys(eventsByDate).sort((a, b) => {
-            return eventsByDate[a].date - eventsByDate[b].date;
-        });
-
-        sortedDates.forEach((dateKey, index) => {
-            const dayData = eventsByDate[dateKey];
-            const date = dayData.date;
-            const dayName = dayNames[date.getDay()];
-            const shortDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-
-            // Ajouter le nom du jour et la date
-            lines.push(`${dayName} ${shortDate}`);
-
-            // Ajouter les événements du jour
-            dayData.events.forEach(event => {
-                const startTime = `${event.start.getHours()}h${event.start.getMinutes().toString().padStart(2, '0')}`;
-                const endTime = `${event.end.getHours()}h${event.end.getMinutes().toString().padStart(2, '0')}`;
-                const location = event.location ? ` (${event.location})` : '';
-                lines.push(`${startTime} - ${endTime} -> ${event.title}${location}`);
-            });
-
-            // Ajouter une ligne vide entre les jours (sauf pour le dernier)
-            if (index < sortedDates.length - 1) {
-                lines.push('');
-            }
-        });
-
-        return lines.join('\n');
-    }
-
-    /**
      * Génère le contenu iCal au format RFC 5545
      */
     function generateICS(events) {
@@ -374,21 +321,6 @@
         lines.push('END:VCALENDAR');
 
         return lines.join('\r\n');
-    }
-
-    /**
-     * Télécharge le fichier texte
-     */
-    function downloadTextFile(textContent, filename) {
-        const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(url), 100);
     }
 
     /**
@@ -528,9 +460,9 @@
     /**
      * Fonction principale - Lance l'export automatique ou manuel
      * @param {boolean} forceExport - Si true, bypass la vérification de temps (pour export manuel)
-     * @param {string} format - Format d'export: 'text', 'ics', ou 'google'
+     * @param {string} format - Format d'export: 'ics' ou 'google'
      */
-    async function autoExport(forceExport = false, format = 'text') {
+    async function autoExport(forceExport = false, format = 'ics') {
         try {
             const exportType = forceExport ? 'manuel' : 'automatique';
             console.log(`[CESI Exporter] Démarrage de l'export ${exportType} (format: ${format})`);
@@ -560,18 +492,7 @@
             const weekNumber = weekTitle.match(/S(\d+)/)?.[1] || new Date().getWeek();
 
             // Exporter selon le format demandé
-            if (format === 'text') {
-                // Export TXT
-                updateNotification('Génération du fichier texte...', 'info');
-                const textContent = generateTextFile(events);
-                const filename = `emploi-du-temps-cesi-semaine-${weekNumber}.txt`;
-                downloadTextFile(textContent, filename);
-
-                // Notification de succès
-                updateNotification(`✓ Fichier TXT téléchargé ! ${events.length} événement${events.length > 1 ? 's' : ''}`, 'success');
-                hideNotification(4000);
-
-            } else if (format === 'ics') {
+            if (format === 'ics') {
                 // Export iCal
                 updateNotification('Génération du fichier iCal...', 'info');
                 const icsContent = generateICS(events);
@@ -610,8 +531,8 @@
      */
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.action === 'extractEvents') {
-            // Récupérer le format demandé (par défaut: 'text')
-            const format = request.format || 'text';
+            // Récupérer le format demandé (par défaut: 'ics')
+            const format = request.format || 'ics';
 
             // Forcer l'export (true) pour bypass la restriction de temps
             autoExport(true, format)
