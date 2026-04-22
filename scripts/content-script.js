@@ -423,6 +423,26 @@
                     .fc-head .fc-divider { display: none !important; }
                 `;
                 clonedDoc.head.appendChild(style);
+
+                // Supprimer la section "Soirée" en bas du calendrier (grille/bande supplémentaire).
+                // On cherche tout élément qui contient uniquement ce libellé et on masque son conteneur.
+                clonedDoc.querySelectorAll('*').forEach(el => {
+                    const txt = (el.childNodes.length === 1 && el.firstChild.nodeType === Node.TEXT_NODE)
+                        ? el.textContent.trim()
+                        : '';
+                    if (txt === 'Soirée') {
+                        // Remonter jusqu'au parent qui englobe toute la ligne/section Soirée
+                        let container = el;
+                        for (let i = 0; i < 6 && container.parentElement; i++) {
+                            container = container.parentElement;
+                            const tag = container.tagName;
+                            if (tag === 'TR' || (container.classList && (container.classList.contains('fc-row') || container.classList.contains('fc-time-grid') || container.classList.contains('fc-day-grid'))) ) {
+                                break;
+                            }
+                        }
+                        container.style.display = 'none';
+                    }
+                });
             }
         });
 
