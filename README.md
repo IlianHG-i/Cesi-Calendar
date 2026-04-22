@@ -96,6 +96,46 @@ Pour mieux organiser vos cours :
 3. Vous pouvez activer/désactiver l'affichage facilement
 4. Personnalisez la couleur pour distinguer vos cours
 
+### Import dans Proton Calendar
+
+Proton Calendar ne propose **pas d'API publique** pour insérer des événements depuis une extension. Le bouton "Proton Calendar (.ics)" télécharge donc un fichier que tu importes ensuite manuellement — c'est simple et ça prend 30 secondes.
+
+1. Clique sur **Proton Calendar (.ics)** dans le popup de l'extension → le fichier se télécharge
+2. Ouvre [Proton Calendar](https://calendar.proton.me) dans ton navigateur et connecte-toi
+3. En haut à droite, clique sur **Paramètres** (⚙️) → **Tous les paramètres de Proton Calendar**
+4. Dans le menu de gauche, ouvre l'onglet **Calendriers**
+5. Clique sur **Importer un calendrier**
+6. Sélectionne le fichier `.ics` téléchargé
+7. Choisis le calendrier de destination (crée un calendrier "CESI" si tu veux une vue isolée)
+8. Valide l'import
+
+> **Astuce** : Proton déduplique les événements à l'import via leur UID — tu peux réimporter un `.ics` à jour sans créer de doublons.
+
+### Import dans Apple Calendar
+
+Apple Calendar / iCloud non plus n'a pas d'API web. Même méthode que Proton : téléchargement du `.ics` + import manuel.
+
+**Sur Mac**
+
+1. Clique sur **Apple Calendar (.ics)** dans le popup de l'extension
+2. Ouvre l'application **Calendrier**
+3. Menu **Fichier** → **Importer…**
+4. Sélectionne le fichier `.ics` téléchargé
+5. Dans la boîte de dialogue, choisis le calendrier de destination et clique **OK**
+
+**Sur iPhone / iPad**
+
+1. Envoie-toi le fichier `.ics` par AirDrop, mail ou via iCloud Drive
+2. Ouvre le fichier depuis l'app **Fichiers** ou **Mail**
+3. iOS propose automatiquement **Ajouter tous les événements** → choisis le calendrier cible
+
+**Via iCloud.com**
+
+1. Ouvre [iCloud Calendar](https://www.icloud.com/calendar/) dans ton navigateur
+2. Il n'y a **pas** de bouton d'import direct sur l'interface web iCloud. Utilise la méthode Mac ci-dessus.
+
+> **Astuce** : Crée un calendrier dédié "CESI" dans l'app Calendrier pour isoler les cours et pouvoir les masquer d'un clic.
+
 ## Configuration
 
 ### Prévention des doublons

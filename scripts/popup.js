@@ -69,7 +69,7 @@
     }
 
     /**
-     * Affiche les instructions
+     * Affiche le bloc d'instructions d'import.
      */
     function showInstructions() {
         instructionsDiv.classList.remove('hidden');
