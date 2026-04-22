@@ -8,8 +8,8 @@
 
     // Éléments DOM
     const exportIcsBtn = document.getElementById('exportIcsBtn');
-    const exportMultiBtn = document.getElementById('exportMultiBtn');
-    const weeksSelect = document.getElementById('weeksSelect');
+    const exportTwoWeeksBtn = document.getElementById('exportTwoWeeksBtn');
+    const exportThreeWeeksBtn = document.getElementById('exportThreeWeeksBtn');
     const exportGoogleBtn = document.getElementById('exportGoogleBtn');
     const statusDiv = document.getElementById('status');
     const statusMessage = statusDiv.querySelector('.status-message');
@@ -98,9 +98,9 @@
      */
     function setButtonsState(enabled) {
         exportIcsBtn.disabled = !enabled;
-        exportMultiBtn.disabled = !enabled;
-        weeksSelect.disabled = !enabled;
-        exportGoogleBtn.disabled = !enabled;
+        exportTwoWeeksBtn.disabled = !enabled;
+        exportThreeWeeksBtn.disabled = !enabled;
+        // exportGoogleBtn reste désactivé en permanence (en travaux)
     }
 
     /**
@@ -280,11 +280,9 @@
 
         // Écouter les clics sur les boutons
         exportIcsBtn.addEventListener('click', () => handleExport('ics', 1));
-        exportMultiBtn.addEventListener('click', () => {
-            const weeks = parseInt(weeksSelect.value, 10) || 3;
-            handleExport('ics', weeks);
-        });
-        exportGoogleBtn.addEventListener('click', () => handleExport('google', 1));
+        exportTwoWeeksBtn.addEventListener('click', () => handleExport('ics', 2));
+        exportThreeWeeksBtn.addEventListener('click', () => handleExport('ics', 3));
+        // exportGoogleBtn en travaux, pas de handler
     }
 
     // Démarrer quand le DOM est prêt

@@ -33,20 +33,19 @@
                     <span class="btn-text">Télécharger iCal (.ics)</span>
                 </button>
 
-                <div class="multi-week-row" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                    <button id="exportMultiBtn" class="btn btn-primary" style="flex: 1;">
-                        <span class="btn-icon">📆</span>
-                        <span class="btn-text">Exporter plusieurs semaines</span>
-                    </button>
-                    <select id="weeksSelect" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 14px;">
-                        <option value="2">2 sem.</option>
-                        <option value="3" selected>3 sem.</option>
-                    </select>
-                </div>
+                <button id="exportTwoWeeksBtn" class="btn btn-primary" style="margin-top: 10px;">
+                    <span class="btn-icon">📆</span>
+                    <span class="btn-text">Télécharger 2 semaines (.ics)</span>
+                </button>
 
-                <button id="exportGoogleBtn" class="btn btn-google" style="margin-top: 10px;">
-                    <span class="btn-icon">🔄</span>
-                    <span class="btn-text">Exporter vers Google Calendar</span>
+                <button id="exportThreeWeeksBtn" class="btn btn-primary" style="margin-top: 10px;">
+                    <span class="btn-icon">📆</span>
+                    <span class="btn-text">Télécharger 3 semaines (.ics)</span>
+                </button>
+
+                <button id="exportGoogleBtn" class="btn btn-google" style="margin-top: 10px;" disabled title="Fonctionnalité en cours de développement">
+                    <span class="btn-icon">🚧</span>
+                    <span class="btn-text">Google Calendar (en travaux)</span>
                 </button>
             </div>
 
@@ -83,7 +82,7 @@
         </main>
 
         <footer>
-            <p class="version">v1.2.0</p>
+            <p class="version">v1.2.1</p>
         </footer>
     </div>
 
