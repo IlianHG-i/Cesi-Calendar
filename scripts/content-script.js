@@ -389,6 +389,41 @@
     }
 
     /**
+     * Capture la vue calendrier en PNG via html2canvas et déclenche le téléchargement.
+     * @param {string} filename - Nom du fichier à télécharger
+     */
+    async function downloadCalendarImage(filename) {
+        if (typeof html2canvas !== 'function') {
+            throw new Error('html2canvas non chargé');
+        }
+        const target = document.querySelector('.fc-view');
+        if (!target) {
+            throw new Error('Vue calendrier introuvable (.fc-view)');
+        }
+
+        updateNotification('Génération de l\'image...', 'info');
+
+        const canvas = await html2canvas(target, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            logging: false
+        });
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('Échec de la conversion en PNG');
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+    }
+
+    /**
      * Exporte les événements directement vers Google Calendar via API
      * @param {Array} events - Tableau d'événements à exporter
      * @returns {Promise<Object>} Résultat de l'export
@@ -543,7 +578,7 @@
                 if (wn) weekNumbers = [wn];
             }
 
-            if (events.length === 0) {
+            if (events.length === 0 && format !== 'png') {
                 updateNotification('Aucun événement trouvé', 'error');
                 hideNotification(3000);
                 return;
@@ -570,6 +605,13 @@
                 // Export vers Google Calendar via API
                 await exportToGoogleCalendar(events);
                 // Les notifications sont gérées dans exportToGoogleCalendar()
+
+            } else if (format === 'png') {
+                // Export image PNG via html2canvas
+                const filename = `emploi-du-temps-cesi-${fileSuffix}.png`;
+                await downloadCalendarImage(filename);
+                updateNotification(`✓ Image PNG téléchargée !`, 'success');
+                hideNotification(4000);
 
             } else {
                 throw new Error(`Format d'export inconnu: ${format}`);
