@@ -6,12 +6,12 @@ Extension Chrome / Firefox qui exporte automatiquement votre emploi du temps CES
 
 ## Fonctionnalités
 
-- **Export automatique** d'un fichier `.ics` dès que vous ouvrez la page emploi du temps
-- **Export multi-semaines** : 1, 2 ou 3 semaines consécutives en un seul fichier
-- **Export direct vers Google Calendar** via OAuth2 (pas de fichier à importer manuellement)
+- **Export iCal (.ics)** de la semaine affichée, en un clic
+- **Export multi-semaines** : 2 ou 3 semaines consécutives en un seul fichier
 - **Export en image PNG** du calendrier pour le partager facilement
+- **Export vers Google Calendar** (🚧 en cours de développement — nécessite pour l'instant que l'utilisateur soit ajouté manuellement en "test user" dans la console Google, peu pratique à grande échelle)
 - **Notification visuelle** en temps réel de la progression
-- **Prévention des doublons** : pas de réexport automatique si un export a déjà été fait il y a moins d'1 heure
+- Extension 100% manuelle : aucun téléchargement automatique, vous contrôlez quand exporter
 
 ---
 
@@ -38,24 +38,13 @@ Extension Chrome / Firefox qui exporte automatiquement votre emploi du temps CES
 
 ## Utilisation
 
-### Export automatique (par défaut)
-
 1. Connectez-vous sur [ent.cesi.fr](https://ent.cesi.fr)
 2. Allez dans **Mon emploi du temps**
-3. L'extension détecte la page, attend 2 secondes, puis télécharge automatiquement un `.ics` de la semaine affichée.
-
-Une notification s'affiche en haut à droite pendant l'opération :
-
-```
-⏳ Extraction de la semaine en cours...
-✓ Fichier iCal téléchargé ! 15 événements
-```
-
-Nom du fichier : `emploi-du-temps-cesi-semaine-Sxx.ics`
+3. Un petit badge `✓ CESI Exporter actif` apparaît en bas à droite (il disparaît après 5s)
+4. Cliquez sur l'icône de l'extension en haut à droite du navigateur pour ouvrir le popup
+5. Choisissez le bouton qui vous intéresse
 
 ### Boutons du popup
-
-Cliquez sur l'icône de l'extension pour accéder aux différents exports :
 
 | Bouton | Action |
 |---|---|
@@ -63,33 +52,19 @@ Cliquez sur l'icône de l'extension pour accéder aux différents exports :
 | 📆 **Télécharger 2 semaines (.ics)** | Exporte la semaine affichée + la suivante |
 | 📆 **Télécharger 3 semaines (.ics)** | Exporte la semaine affichée + les 2 suivantes |
 | 🖼️ **Télécharger en image (.png)** | Capture le calendrier en image PNG haute résolution |
-| 🔄 **Exporter vers Google Calendar** | Pousse les événements directement dans votre Google Calendar (via OAuth) |
+| 🚧 **Google Calendar (en travaux)** | Fonctionnalité en cours de développement, désactivée pour le moment |
 
 > 💡 Pour les exports multi-semaines, l'extension navigue automatiquement vers les semaines suivantes puis revient à la semaine de départ — pas besoin de faire quoi que ce soit.
 
+Nom du fichier téléchargé : `emploi-du-temps-cesi-semaine-Sxx.ics` (ou `semaines-Sxx-Syy.ics` pour le multi).
+
 ---
 
-## Exporter vers Google Calendar
+## Google Calendar (en cours de développement)
 
-Le bouton **🔄 Exporter vers Google Calendar** pousse les événements directement dans votre agenda Google, sans passer par un fichier à télécharger.
+Le bouton **🔄 Google Calendar** est grisé pour le moment. La mécanique technique fonctionne (OAuth2, push direct via l'API) mais elle repose sur le mode **Testing** de Google Cloud Console : les utilisateurs doivent être ajoutés manuellement comme "test users" par le mainteneur du projet, ce qui n'est pas scalable. On réactivera le bouton quand l'app sera publiée sur le Chrome Web Store et vérifiée par Google (ou passée en production).
 
-### Premier usage
-
-1. Cliquez sur le bouton
-2. Une popup Google s'ouvre → connectez-vous avec votre compte
-3. Google affiche **"Google n'a pas vérifié cette application"** — c'est normal (l'app n'est pas publiée sur le Chrome Web Store)
-   - Cliquez sur **Avancé**
-   - Cliquez sur **Accéder à CESI Calendar Exporter (non sécurisé)**
-4. Autorisez l'accès à votre Google Calendar
-5. Les événements de la semaine se créent automatiquement dans votre calendrier principal
-
-### Au prochain usage
-
-Plus rien à faire : l'autorisation est mémorisée. Un clic suffit.
-
-### Besoin d'ajouter un utilisateur ?
-
-Le projet OAuth est en mode **Testing**. Par défaut, seules les personnes listées comme "utilisateurs de test" peuvent utiliser cette voie. Le mainteneur du projet doit ajouter votre email dans la Google Cloud Console (limite 100 users). Contactez-le.
+En attendant, utilisez le bouton **📅 Télécharger iCal (.ics)** et importez le fichier manuellement (voir ci-dessous). Ça prend 30 secondes.
 
 ---
 
@@ -134,48 +109,13 @@ Proton Calendar n'a pas d'API publique pour l'insertion directe. Méthode manuel
 
 ---
 
-## Paramètres
-
-### Désactiver l'export automatique
-
-Si vous voulez uniquement déclencher l'export via le popup, éditez `scripts/content-script.js` à la toute fin du fichier :
-
-```javascript
-// Commentez ces lignes :
-// setTimeout(() => {
-//     autoExport();
-// }, 2000);
-```
-
-### Modifier le délai anti-doublon
-
-Par défaut, l'extension ne réexporte pas automatiquement si un export a été fait il y a moins d'1 heure. Dans `scripts/content-script.js` :
-
-```javascript
-const CONFIG = {
-    EXPORT_DELAY_HOURS: 1, // Modifier cette valeur
-    ...
-};
-```
-
----
-
 ## Dépannage
 
-### L'export ne se déclenche pas
+### Le popup ne répond pas / "Extension non chargée"
 
-- Attendez 2-3 secondes après le chargement de la page
 - Vérifiez que vous êtes bien sur `ent.cesi.fr/mon-emploi-du-temps`
-- Rafraîchissez la page (F5)
+- Rafraîchissez la page (F5) puis rouvrez le popup
 - Ouvrez la console (F12) et cherchez les logs `[CESI Exporter]`
-
-### "Export déjà effectué récemment"
-
-Normal. L'extension évite de spammer des téléchargements. Pour forcer un nouvel export, utilisez le popup de l'extension.
-
-### Google Calendar : "bad client id"
-
-Vérifiez dans `chrome://extensions/` que l'ID de l'extension est bien `acnjjemnlheffchiaiplnfpcfenjnmcb`. Si ce n'est pas le cas, le champ `key` du `manifest.json` n'a pas été pris en compte — supprimez l'extension et rechargez-la depuis le dossier.
 
 ### Le PNG contient des traits parasites
 

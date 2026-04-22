@@ -744,20 +744,14 @@
         }, 5000);
     }
 
-    // Lancer l'export automatique après un court délai
-    console.log('%c[CESI Exporter] 🚀 Lancement automatique dans 2 secondes', 'color: orange; font-weight: bold');
-
-    // Créer le badge visuel
+    // Pas d'export automatique : l'extension attend un clic sur un bouton du popup.
+    // Le badge visuel confirme simplement que l'extension est active sur la page.
     try {
         createActiveBadge();
     } catch (error) {
         console.error('[CESI Exporter] Erreur création badge:', error);
     }
 
-    setTimeout(() => {
-        autoExport();
-    }, 2000);
-
-    console.log('%c[CESI Exporter] ✅ Initialisation terminée - Extension prête', 'color: green; font-weight: bold');
+    console.log('%c[CESI Exporter] ✅ Extension prête — cliquez sur l\'icône pour exporter', 'color: green; font-weight: bold');
 
 })();
