@@ -26,11 +26,11 @@ Le bouton existant (export 1 semaine) reste **inchangé**. On ajoute un **nouvea
 - Timing : avec `LOAD_DELAY_MS=800`, 3 semaines ≈ 15-18s. Documenter dans la notification.
 
 ## TODOs
-- [ ] Identifier le sélecteur du bouton "semaine suivante" FullCalendar sur la page ENT
-- [ ] Ajouter `extractMultipleWeeks(count)` dans `content-script.js`
-- [ ] Étendre le message handler pour accepter `weeks`
-- [ ] Ajouter bouton + sélecteur dans `popup.html`
-- [ ] Handler correspondant dans `popup.js`
+- [x] Sélecteur identifié : `.fc-next-button` / `.fc-prev-button` (FullCalendar v3)
+- [x] Ajouter `extractMultipleWeeks(count)` dans `content-script.js`
+- [x] Étendre le message handler pour accepter `weeks`
+- [x] Ajouter bouton + sélecteur dans `popup.html`
+- [x] Handler correspondant dans `popup.js`
+- [x] Bump manifest + popup footer (v1.2.0)
 - [ ] Tester sur la vraie page ENT (surtout le passage de semaine)
-- [ ] Bump manifest + popup footer
 - [ ] PR + merge + tag
