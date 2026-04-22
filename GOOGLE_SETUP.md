@@ -1,12 +1,20 @@
-# Configuration Google Cloud Console pour l'export vers Google Calendar
+# Configuration Google Cloud Console (pour forks / maintenance)
+
+> ⚠️ **Ce guide n'est PAS nécessaire pour les utilisateurs finaux.**
+> Le `client_id` OAuth2 du projet est déjà configuré dans `manifest.json` et fonctionne out-of-the-box pour tout utilisateur ajouté comme "test user" dans la Google Cloud Console du projet principal.
+>
+> Ce guide s'adresse uniquement :
+> - Aux personnes qui **forkent** ce projet et veulent leur propre `client_id`
+> - Au mainteneur actuel qui voudrait refaire la configuration (rotation de clé, etc.)
 
 Ce guide vous explique comment configurer l'authentification OAuth2 pour permettre à l'extension d'exporter directement vers Google Calendar via l'API.
 
 ## Prérequis
 
 - Un compte Google
-- L'extension CESI Calendar Exporter installée dans votre navigateur
+- L'extension CESI Calendar Exporter clonée/installée localement
 - 10-15 minutes pour la configuration
+- Pour un fork : générer votre propre paire de clés (voir section "Générer la clé d'extension" ci-dessous)
 
 ---
 
@@ -232,6 +240,46 @@ Si vous rencontrez des problèmes :
    - Allez dans `chrome://extensions/`
    - Cliquez sur "Inspecter les vues : background page" sous l'extension
 4. Consultez le fichier README.md pour plus d'informations
+
+---
+
+## Annexe : Générer la clé d'extension (pour un fork)
+
+Si vous forkez le projet, vous devez générer **votre propre paire de clés** pour figer un ID d'extension unique (sinon l'OAuth du projet principal ne fonctionnera pas chez vous).
+
+### 1. Générer la paire de clés avec OpenSSL
+
+```bash
+openssl genrsa 2048 2>/dev/null | openssl pkcs8 -topk8 -nocrypt -out key.pem
+```
+
+La clé privée `key.pem` est créée dans le dossier courant. **Sauvegardez-la dans un endroit sûr** (gestionnaire de mots de passe, cloud chiffré) — si vous la perdez, vous ne pourrez plus mettre à jour l'extension sous le même ID.
+
+> ⚠️ **Ne commitez JAMAIS `key.pem` sur un repo public.** Le `.gitignore` de ce projet l'exclut déjà.
+
+### 2. Extraire la clé publique en base64
+
+```bash
+openssl rsa -in key.pem -pubout -outform DER 2>/dev/null | openssl base64 -A
+```
+
+Copiez la sortie dans le champ `key` du `manifest.json` (remplacez la valeur existante).
+
+### 3. Calculer l'ID d'extension
+
+```bash
+openssl rsa -in key.pem -pubout -outform DER 2>/dev/null | shasum -a 256 | head -c 32 | tr '0-9a-f' 'a-p'
+```
+
+Utilisez cet ID dans l'étape 5 (ID d'élément) du guide ci-dessus, lors de la création de l'ID client OAuth.
+
+### 4. Mettre `key.pem` hors du dossier de l'extension
+
+Chrome affiche un warning si `key.pem` est dans le dossier de l'extension chargée. Déplacez-la ailleurs après génération :
+
+```bash
+mv key.pem ~/Documents/mon-extension-key.pem
+```
 
 ---
 
