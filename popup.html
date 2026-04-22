@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CESI Calendar Exporter</title>
+    <link rel="stylesheet" href="styles/popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>CESI Calendar Exporter</h1>
+            <p class="subtitle">Exportez votre emploi du temps vers Google Calendar</p>
+            <div class="info-tip">
+                💡 Changez de jour avec les flèches ← → puis réexportez pour toute la semaine
+            </div>
+        </header>
+
+        <main>
+            <div id="status" class="status hidden">
+                <div class="status-icon"></div>
+                <p class="status-message"></p>
+            </div>
+
+            <div id="info" class="info hidden">
+                <p class="week-title"></p>
+                <p class="event-count"></p>
+            </div>
+
+            <div class="actions">
+                <button id="exportTxtBtn" class="btn btn-primary">
+                    <span class="btn-icon">📄</span>
+                    <span class="btn-text">Télécharger TXT</span>
+                </button>
+
+                <button id="exportIcsBtn" class="btn btn-primary" style="margin-top: 10px;">
+                    <span class="btn-icon">📅</span>
+                    <span class="btn-text">Télécharger iCal (.ics)</span>
+                </button>
+
+                <button id="exportGoogleBtn" class="btn btn-google" style="margin-top: 10px;">
+                    <span class="btn-icon">🔄</span>
+                    <span class="btn-text">Exporter vers Google Calendar</span>
+                </button>
+            </div>
+
+            <div id="error" class="error hidden">
+                <p class="error-message"></p>
+            </div>
+
+            <div class="help-box" id="helpBox" style="display: none;">
+                <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #333;">📘 Comment utiliser l'extension ?</h3>
+                <ol style="margin: 0; padding-left: 20px; font-size: 12px;">
+                    <li style="margin-bottom: 8px;">Rechargez la page emploi du temps (<code>F5</code>)</li>
+                    <li style="margin-bottom: 8px;">Vous verrez un badge <span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px;">✓ CESI Exporter actif</span> en bas à droite</li>
+                    <li style="margin-bottom: 8px;">L'export démarre automatiquement après 2 secondes</li>
+                    <li>Ou cliquez sur le bouton ci-dessus pour exporter manuellement</li>
+                </ol>
+                <p style="margin: 12px 0 0 0; padding: 8px; background: #fff9e6; border-radius: 4px; font-size: 11px; color: #856404;">
+                    💡 <strong>Vérifiez la console</strong> (F12) : des logs verts confirment que l'extension fonctionne
+                </p>
+            </div>
+
+            <div class="instructions hidden" id="instructions">
+                <h3>Comment importer dans Google Calendar ?</h3>
+                <ol>
+                    <li>Ouvrez <a href="https://calendar.google.com" target="_blank">Google Calendar</a></li>
+                    <li>Cliquez sur l'icône ⚙️ (Paramètres) → <strong>Paramètres</strong></li>
+                    <li>Dans le menu de gauche, cliquez sur <strong>Importer et exporter</strong></li>
+                    <li>Cliquez sur <strong>Sélectionner un fichier sur votre ordinateur</strong></li>
+                    <li>Sélectionnez le fichier <code>emploi-du-temps-cesi.ics</code> téléchargé</li>
+                    <li>Choisissez le calendrier de destination</li>
+                    <li>Cliquez sur <strong>Importer</strong></li>
+                </ol>
+                <p class="tip">💡 Astuce : Créez un calendrier dédié "CESI" pour mieux organiser vos cours !</p>
+            </div>
+        </main>
+
+        <footer>
+            <p class="version">v1.0.0</p>
+        </footer>
+    </div>
+
+    <script src="lib/ics-generator.js"></script>
+    <script src="scripts/popup.js"></script>
+</body>
+</html>

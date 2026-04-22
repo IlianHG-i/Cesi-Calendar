@@ -1,0 +1,29 @@
+# Fichiers système
+.DS_Store
+Thumbs.db
+
+# Fichiers d'éditeur
+.vscode/
+.idea/
+.claude/settings.local.json
+*.swp
+*.swo
+*~
+
+# Fichiers de build
+*.zip
+*.crx
+*.xpi
+
+# Node modules (si vous ajoutez npm plus tard)
+node_modules/
+
+# Fichiers de log
+*.log
+
+# Fichiers temporaires
+tmp/
+temp/
+
+# Icônes générées (à commiter si vous en créez)
+# icons/*.png

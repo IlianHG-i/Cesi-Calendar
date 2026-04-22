@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "CESI Calendar Exporter",
+  "version": "2.0.0",
+  "description": "Exporte votre emploi du temps CESI vers Google Calendar (TXT, iCal, ou API directe)",
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "identity",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://ent.cesi.fr/*",
+    "https://www.googleapis.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://ent.cesi.fr/mon-emploi-du-temps*"],
+      "js": ["scripts/content-script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "oauth2": {
+    "client_id": "VOTRE_CLIENT_ID.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/calendar.events"
+    ]
+  }
+}
