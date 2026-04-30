@@ -1,0 +1,103 @@
+name: Release Firefox XPI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-sign-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install web-ext
+        run: npm install -g web-ext
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Sign XPI via AMO
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          web-ext sign \
+            --source-dir . \
+            --artifacts-dir ./dist \
+            --api-key "$AMO_JWT_ISSUER" \
+            --api-secret "$AMO_JWT_SECRET" \
+            --channel unlisted \
+            --ignore-files \
+              ".git" ".github/**" ".claude/**" \
+              "CLAUDE.md" "README.md" "QUICK_START.md" "GOOGLE_SETUP.md" \
+              ".gitignore" "key.pem" "updates.json" "*.xpi"
+
+      - name: Locate signed XPI
+        id: signed
+        run: |
+          SIGNED=$(ls dist/*.xpi | head -n 1)
+          BASENAME=$(basename "$SIGNED")
+          echo "path=$SIGNED" >> "$GITHUB_OUTPUT"
+          echo "filename=$BASENAME" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure GitHub release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1 \
+            || gh release create "v${{ steps.version.outputs.version }}" \
+              --title "v${{ steps.version.outputs.version }}" \
+              --generate-notes
+
+      - name: Upload signed XPI to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "v${{ steps.version.outputs.version }}" \
+            "${{ steps.signed.outputs.path }}" --clobber
+
+      - name: Update updates.json
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          FILENAME="${{ steps.signed.outputs.filename }}"
+          XPI_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/${FILENAME}"
+          cat > updates.json <<EOF
+          {
+            "addons": {
+              "cesi-calendar-exporter@ilianhg-i.github.io": {
+                "updates": [
+                  {
+                    "version": "${VERSION}",
+                    "update_link": "${XPI_URL}"
+                  }
+                ]
+              }
+            }
+          }
+          EOF
+
+      - name: Commit updated updates.json to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add updates.json
+          if git diff --staged --quiet; then
+            echo "No changes to updates.json"
+          else
+            git commit -m "chore: update updates.json for v${{ steps.version.outputs.version }}"
+            git push origin HEAD:main
+          fi
