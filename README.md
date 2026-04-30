@@ -25,14 +25,28 @@ Extension Chrome / Firefox qui exporte automatiquement votre emploi du temps CES
 4. Cliquez sur **Charger l'extension non empaquetée**
 5. Sélectionnez le dossier `cesi-calendar-exporter`
 
-### Firefox
+### Firefox (installation durable, recommandée)
 
-1. Téléchargez (ou clonez) ce dépôt
-2. Allez dans `about:debugging#/runtime/this-firefox`
-3. Cliquez sur **Charger un module complémentaire temporaire**
-4. Sélectionnez le fichier `manifest.json` dans le dossier `cesi-calendar-exporter`
+L'extension est signée par Mozilla, ce qui permet une installation permanente sur Firefox stable :
 
-> ⚠️ Sur Firefox, l'extension sera désinstallée à la fermeture du navigateur (limitation Firefox pour les extensions non signées).
+1. Allez sur la [page des releases](https://github.com/IlianHG-i/Cesi-Calendar/releases/latest)
+2. Téléchargez le fichier `.xpi` listé dans **Assets**
+3. Glissez-déposez le fichier dans une fenêtre Firefox (ou ouvrez-le avec Firefox depuis votre explorateur)
+4. Firefox affiche une popup → cliquez **Ajouter**
+5. ✅ Extension installée durablement, persiste entre les redémarrages
+
+**Mises à jour automatiques** : Firefox vérifie régulièrement le fichier `updates.json` du repo. Quand une nouvelle version est publiée, elle s'installe sans intervention.
+
+### Firefox (installation temporaire, depuis la source)
+
+Si vous préférez charger l'extension depuis le code source (pour développer ou tester) :
+
+1. Clonez/téléchargez le dépôt
+2. Ouvrez `about:debugging#/runtime/this-firefox`
+3. Cliquez **Charger un module complémentaire temporaire**
+4. Sélectionnez `manifest.json` dans le dossier
+
+> ⚠️ Cette méthode est désinstallée à la fermeture de Firefox. Préférez l'install durable via le `.xpi` signé.
 
 ---
 

@@ -7,7 +7,15 @@
 chrome://extensions/ → Mode développeur → Charger l'extension non empaquetée → sélectionner le dossier
 ```
 
-**Firefox**
+**Firefox (recommandé : install durable)**
+```
+1. Téléchargez le .xpi depuis la dernière release : https://github.com/IlianHG-i/Cesi-Calendar/releases/latest
+2. Glissez-déposez le .xpi dans une fenêtre Firefox
+3. Cliquez "Ajouter" dans la popup
+```
+L'extension persiste après redémarrage et se met à jour toute seule.
+
+**Firefox (install temporaire, pour les devs)**
 ```
 about:debugging#/runtime/this-firefox → Charger un module complémentaire temporaire → sélectionner manifest.json
 ```
