@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CESI Calendar Exporter",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp6wZLjTswhOXW0HAd+tiEaRl386Dm/z3XfAgSQ1qeb0KXnBd7naCA1B68DxN1gCnVH5/pXO4hop9S7GUXCWTfQB/xWWwez1RTq3x9zOwYD4YqNS9YwsGNv5AnLpwvl3sAwI1iNkU/8q/Fol83wB0JGP5hOqA3jn9c41oz28dNvbQJ7RzJVi+uR6mvnaoid0Bm9gYWSrEx7Li0r1EgWEWsQ1CKh/8mHA9uov9+TPWH8kZE9JbirGWG0+9VPNT4A6BxOmDDPc2bfVR3zvr+kNlT+449F+L3T1lO6WGxkFGg6KmE8AOJQOkZxDx4KHKHT+MpLv77ax8WoFOKLrmn7pvaQIDAQAB",
   "description": "Exporte votre emploi du temps CESI vers Google Calendar (TXT, iCal, ou API directe)",
   "permissions": [
@@ -23,7 +23,7 @@
     }
   },
   "sidebar_action": {
-    "default_panel": "popup.html",
+    "default_panel": "popup.html?context=sidebar",
     "default_title": "CESI Calendar Exporter",
     "default_icon": {
       "16": "icons/icon16.png",
@@ -45,6 +45,12 @@
       "matches": ["https://ent.cesi.fr/mon-emploi-du-temps*"],
       "js": ["lib/html2canvas.min.js", "scripts/content-script.js"],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["scripts/inject.js"],
+      "matches": ["https://ent.cesi.fr/*"]
     }
   ],
   "oauth2": {

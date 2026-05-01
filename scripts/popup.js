@@ -272,6 +272,23 @@
     async function init() {
         console.log('[CESI Exporter] Popup initialisé');
 
+        // Si on est ouvert depuis la sidebar Firefox, demander au content script
+        // de replier la nav CESI à gauche pour libérer de l'espace.
+        const isSidebar = window.location.search.includes('context=sidebar');
+        if (isSidebar) {
+            try {
+                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                if (tab && tab.url && tab.url.includes('ent.cesi.fr')) {
+                    chrome.tabs.sendMessage(tab.id, { action: 'collapseCesiNav' }, () => {
+                        // Erreur ignorée si content script pas chargé sur la page
+                        void chrome.runtime.lastError;
+                    });
+                }
+            } catch (e) {
+                console.warn('[CESI Exporter] collapseCesiNav non envoyé:', e);
+            }
+        }
+
         // Vérifier si nous sommes sur la bonne page
         try {
             await checkCurrentTab();
