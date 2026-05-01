@@ -9,6 +9,36 @@
     console.log('%c[CESI Exporter] ✅ Content script chargé avec succès', 'color: green; font-size: 16px; font-weight: bold');
     console.log('%c[CESI Exporter] Version: 2.0 - Mode automatique activé', 'color: blue; font-size: 12px');
 
+    // Détection Firefox : seul navigateur où le souci de sidebar + vue jour
+    // se produit. Chrome n'a pas de sidebar_action, on ne touche pas la page là.
+    const IS_FIREFOX = typeof navigator !== 'undefined' && /Firefox\//.test(navigator.userAgent);
+
+    // Sur Firefox uniquement : injecte un script qui s'exécute dans le contexte
+    // de la page (accès à jQuery + instance FullCalendar) pour forcer la vue semaine.
+    if (IS_FIREFOX) {
+        try {
+            const inject = document.createElement('script');
+            inject.src = chrome.runtime.getURL('scripts/inject.js');
+            inject.onload = function() { this.remove(); };
+            (document.head || document.documentElement).appendChild(inject);
+        } catch (e) {
+            console.warn('[CESI Exporter] Impossible d\'injecter inject.js:', e);
+        }
+    }
+
+    /**
+     * Replie la barre de navigation CESI à gauche pour libérer de l'espace
+     * (utile quand la sidebar de l'extension prend de la place).
+     */
+    function collapseCesiNav() {
+        const btn = document.querySelector('.hautDePage__navigation__masquer.active');
+        if (btn) {
+            btn.click();
+            return true;
+        }
+        return false;
+    }
+
     // Configuration
     const CONFIG = {
         EXPORT_DELAY_HOURS: 1, // Ne pas réexporter si déjà fait il y a moins de X heures
@@ -693,6 +723,12 @@
                         error: error.message
                     });
                 });
+            return true;
+        }
+
+        if (request.action === 'collapseCesiNav') {
+            const collapsed = collapseCesiNav();
+            sendResponse({ success: true, collapsed });
             return true;
         }
     });
