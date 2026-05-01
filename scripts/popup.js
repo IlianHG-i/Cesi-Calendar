@@ -126,7 +126,7 @@
                 throw new Error('Impossible de détecter l\'onglet actif');
             }
 
-            if (!tab.url.includes('ent.cesi.fr/mon-emploi-du-temps')) {
+            if (!tab.url || !tab.url.includes('ent.cesi.fr/mon-emploi-du-temps')) {
                 throw new Error('Veuillez ouvrir la page "Mon emploi du temps" sur ent.cesi.fr');
             }
 
