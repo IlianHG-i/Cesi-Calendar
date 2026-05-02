@@ -436,7 +436,13 @@
         const canvas = await html2canvas(target, {
             backgroundColor: '#ffffff',
             scale: 2,
-            useCORS: true,
+            // Firefox tainte le canvas dès qu'un élément cross-origin (image, iframe,
+            // background-image) est rendu, ce qui fait échouer toBlob() avec
+            // 'The operation is insecure'. On désactive donc CORS et on supprime
+            // les éléments potentiellement problématiques dans le DOM cloné.
+            useCORS: false,
+            allowTaint: false,
+            foreignObjectRendering: false,
             logging: false,
             onclone: (clonedDoc) => {
                 // html2canvas rend visibles les traits internes de FullCalendar qui sont
@@ -453,6 +459,10 @@
                     .fc-head .fc-divider { display: none !important; }
                 `;
                 clonedDoc.head.appendChild(style);
+
+                // Anti-taint Firefox: retirer tout <img>, <iframe>, <video>, <canvas>
+                // du DOM cloné. Le calendrier est full-CSS, on n'en a pas besoin.
+                clonedDoc.querySelectorAll('img, iframe, video, canvas, embed, object').forEach(el => el.remove());
 
                 // Supprimer la section "Soirée" en bas du calendrier (grille/bande supplémentaire).
                 // On cherche tout élément qui contient uniquement ce libellé et on masque son conteneur.
