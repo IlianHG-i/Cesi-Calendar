@@ -486,17 +486,23 @@
             }
         });
 
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-        if (!blob) throw new Error('Échec de la conversion en PNG');
+        // Firefox: canvas.toBlob() peut lever 'The operation is insecure' si le canvas
+        // est tainté. On utilise toDataURL puis chrome.downloads via le background
+        // (chrome.downloads contourne les restrictions de link.click() depuis un content script).
+        let dataUrl;
+        try {
+            dataUrl = canvas.toDataURL('image/png');
+        } catch (e) {
+            throw new Error('Conversion PNG impossible (canvas sécurisé) : ' + e.message);
+        }
 
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(url), 100);
+        await new Promise((resolve, reject) => {
+            chrome.runtime.sendMessage({ action: 'downloadFile', dataUrl, filename }, (response) => {
+                if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
+                if (!response || !response.success) return reject(new Error(response?.error || 'Téléchargement échoué'));
+                resolve();
+            });
+        });
     }
 
     /**
