@@ -111,20 +111,6 @@
             return true; // Indique qu'on va répondre de manière asynchrone
         }
 
-        if (request.action === 'downloadFile') {
-            // Téléchargement via chrome.downloads pour contourner les restrictions
-            // Firefox sur link.click() depuis un content script (SecurityError).
-            const { dataUrl, filename } = request;
-            chrome.downloads.download({ url: dataUrl, filename, saveAs: false }, (downloadId) => {
-                if (chrome.runtime.lastError) {
-                    sendResponse({ success: false, error: chrome.runtime.lastError.message });
-                } else {
-                    sendResponse({ success: true, downloadId });
-                }
-            });
-            return true;
-        }
-
         if (request.action === 'revokeAuthToken') {
             console.log('[CESI Exporter Background] Demande de révocation reçue');
 

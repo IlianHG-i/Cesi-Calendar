@@ -419,98 +419,194 @@
     }
 
     /**
-     * Capture la vue calendrier en PNG via html2canvas et déclenche le téléchargement.
-     * @param {string} filename - Nom du fichier à télécharger
+     * Rend la grille hebdomadaire (Lun-Sam, 8h-19h) sur un canvas créé par le content
+     * script et déclenche le téléchargement via chrome.downloads. Pas de capture DOM,
+     * donc pas de tainting, pas d'iframe, marche sur Chrome ET Firefox.
      */
-    async function downloadCalendarImage(filename) {
-        if (typeof html2canvas !== 'function') {
-            throw new Error('html2canvas non chargé');
-        }
-        const target = document.querySelector('.fc-view');
-        if (!target) {
-            throw new Error('Vue calendrier introuvable (.fc-view)');
-        }
-
+    async function renderAndDownloadCalendarPNG(events, filename) {
         updateNotification('Génération de l\'image...', 'info');
 
-        const canvas = await html2canvas(target, {
-            backgroundColor: '#ffffff',
-            scale: 2,
-            // Firefox tainte le canvas dès qu'un élément cross-origin (image, iframe,
-            // background-image) est rendu, ce qui fait échouer toBlob() avec
-            // 'The operation is insecure'. On désactive donc CORS et on supprime
-            // les éléments potentiellement problématiques dans le DOM cloné.
-            useCORS: false,
-            allowTaint: false,
-            foreignObjectRendering: false,
-            logging: false,
-            onclone: (clonedDoc) => {
-                // html2canvas rend visibles les traits internes de FullCalendar qui sont
-                // normalement très discrets. On les neutralise dans le DOM cloné.
-                const style = clonedDoc.createElement('style');
-                style.textContent = `
-                    .fc-minor .fc-widget-content,
-                    .fc-minor .fc-axis { border-top: 0 !important; }
-                    .fc-content-skeleton td,
-                    .fc-content-skeleton table,
-                    .fc-content-skeleton tr { border: 0 !important; }
-                    .fc-bg td.fc-widget-content { border-color: #e0e0e0 !important; }
-                    .fc-divider,
-                    .fc-head .fc-divider { display: none !important; }
-                `;
-                clonedDoc.head.appendChild(style);
+        // Trouver bornes horaires (min start, max end), arrondi à l'heure entière.
+        const startHours = events.map(e => new Date(e.start).getHours());
+        const endHours = events.map(e => {
+            const d = new Date(e.end);
+            return d.getMinutes() > 0 ? d.getHours() + 1 : d.getHours();
+        });
+        const hStart = Math.max(7, Math.min(8, ...startHours));
+        const hEnd = Math.min(20, Math.max(19, ...endHours));
+        const hourCount = hEnd - hStart;
 
-                // Anti-taint Firefox: retirer tout <img>, <iframe>, <video>, <canvas>
-                // du DOM cloné. Le calendrier est full-CSS, on n'en a pas besoin.
-                clonedDoc.querySelectorAll('img, iframe, video, canvas, embed, object').forEach(el => el.remove());
+        // Grouper par jour (clé = YYYY-MM-DD)
+        const days = new Map();
+        for (const e of events) {
+            const d = new Date(e.start);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            if (!days.has(key)) days.set(key, { date: new Date(d.getFullYear(), d.getMonth(), d.getDate()), events: [] });
+            days.get(key).events.push(e);
+        }
+        // Ordonner les jours, ajouter jours manquants Lun-Sam dans la plage min/max
+        const dayList = [...days.values()].sort((a, b) => a.date - b.date);
+        if (dayList.length === 0) throw new Error('Aucun événement à dessiner');
+        // Étendre du lundi (de la semaine du premier event) au samedi
+        const first = dayList[0].date;
+        const monday = new Date(first);
+        const dow = (monday.getDay() + 6) % 7; // 0 = lundi
+        monday.setDate(monday.getDate() - dow);
+        const cols = [];
+        for (let i = 0; i < 6; i++) {
+            const d = new Date(monday);
+            d.setDate(monday.getDate() + i);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            cols.push({ date: d, events: days.get(key)?.events || [] });
+        }
 
-                // Anti-taint Firefox (suite): supprimer toutes les background-image
-                // (CSS) qui pointent souvent sur des CDN cross-origin (icônes, polices,
-                // avatars). Une seule URL cross-origin rendue dans le canvas suffit
-                // à le tainter et faire échouer toDataURL().
-                const killBg = clonedDoc.createElement('style');
-                killBg.textContent = `* { background-image: none !important; list-style-image: none !important; cursor: auto !important; }`;
-                clonedDoc.head.appendChild(killBg);
+        // Dimensions (en CSS px). On render en 2x pour la netteté.
+        const SCALE = 2;
+        const W_TIME = 70;
+        const W_DAY = 200;
+        const H_HEADER = 60;
+        const H_HOUR = 60;
+        const widthCss = W_TIME + W_DAY * cols.length;
+        const heightCss = H_HEADER + H_HOUR * hourCount;
 
-                // Supprimer la section "Soirée" en bas du calendrier (grille/bande supplémentaire).
-                // On cherche tout élément qui contient uniquement ce libellé et on masque son conteneur.
-                clonedDoc.querySelectorAll('*').forEach(el => {
-                    const txt = (el.childNodes.length === 1 && el.firstChild.nodeType === Node.TEXT_NODE)
-                        ? el.textContent.trim()
-                        : '';
-                    if (txt === 'Soirée') {
-                        // Remonter jusqu'au parent qui englobe toute la ligne/section Soirée
-                        let container = el;
-                        for (let i = 0; i < 6 && container.parentElement; i++) {
-                            container = container.parentElement;
-                            const tag = container.tagName;
-                            if (tag === 'TR' || (container.classList && (container.classList.contains('fc-row') || container.classList.contains('fc-time-grid') || container.classList.contains('fc-day-grid'))) ) {
-                                break;
-                            }
-                        }
-                        container.style.display = 'none';
-                    }
-                });
+        const canvas = document.createElement('canvas');
+        canvas.width = widthCss * SCALE;
+        canvas.height = heightCss * SCALE;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(SCALE, SCALE);
+        ctx.textBaseline = 'top';
+        // Police générique : pas de fonts cross-origin, pas de tainting.
+        const FONT = '-apple-system, system-ui, sans-serif';
+
+        // Fond blanc
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, widthCss, heightCss);
+
+        // En-tête : jours
+        const dayNames = ['lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
+        ctx.fillStyle = '#f7f7f7';
+        ctx.fillRect(0, 0, widthCss, H_HEADER);
+        ctx.strokeStyle = '#cccccc';
+        ctx.lineWidth = 1;
+        ctx.fillStyle = '#222';
+        ctx.textAlign = 'center';
+        ctx.font = `bold 16px ${FONT}`;
+        cols.forEach((c, i) => {
+            const x = W_TIME + i * W_DAY;
+            ctx.fillStyle = '#222';
+            ctx.fillText(dayNames[i], x + W_DAY / 2, 12);
+            ctx.font = `14px ${FONT}`;
+            ctx.fillText(`${c.date.getDate()}/${c.date.getMonth() + 1}`, x + W_DAY / 2, 34);
+            ctx.font = `bold 16px ${FONT}`;
+        });
+
+        // Grille horaire
+        ctx.textAlign = 'right';
+        ctx.font = `13px ${FONT}`;
+        ctx.fillStyle = '#666';
+        for (let h = 0; h < hourCount; h++) {
+            const y = H_HEADER + h * H_HOUR;
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(widthCss, y);
+            ctx.stroke();
+            ctx.fillText(`${String(hStart + h).padStart(2, '0')}:00`, W_TIME - 8, y + 4);
+        }
+        // Bordures verticales
+        ctx.strokeStyle = '#cccccc';
+        for (let i = 0; i <= cols.length; i++) {
+            const x = W_TIME + i * W_DAY;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, heightCss);
+            ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.moveTo(W_TIME, 0);
+        ctx.lineTo(W_TIME, heightCss);
+        ctx.stroke();
+        // Bordure bas du header
+        ctx.beginPath();
+        ctx.moveTo(0, H_HEADER);
+        ctx.lineTo(widthCss, H_HEADER);
+        ctx.stroke();
+
+        // Helper : wrap texte
+        function wrapText(text, maxWidth) {
+            const words = text.split(/\s+/);
+            const lines = [];
+            let line = '';
+            for (const w of words) {
+                const test = line ? line + ' ' + w : w;
+                if (ctx.measureText(test).width > maxWidth && line) {
+                    lines.push(line);
+                    line = w;
+                } else {
+                    line = test;
+                }
+            }
+            if (line) lines.push(line);
+            return lines;
+        }
+
+        // Événements (style FullCalendar CESI : fond orange #f4b942, texte blanc)
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        cols.forEach((c, i) => {
+            for (const ev of c.events) {
+                const s = new Date(ev.start);
+                const e = new Date(ev.end);
+                const sH = s.getHours() + s.getMinutes() / 60;
+                const eH = e.getHours() + e.getMinutes() / 60;
+                const top = H_HEADER + (sH - hStart) * H_HOUR;
+                const height = (eH - sH) * H_HOUR;
+                const left = W_TIME + i * W_DAY + 2;
+                const width = W_DAY - 4;
+                // Boîte
+                ctx.fillStyle = '#f4b942';
+                ctx.fillRect(left, top, width, height);
+                ctx.strokeStyle = '#d99d20';
+                ctx.strokeRect(left, top, width, height);
+                // Texte (titre, horaire, lieu)
+                ctx.fillStyle = '#ffffff';
+                const pad = 6;
+                let cy = top + pad;
+                ctx.font = `bold 13px ${FONT}`;
+                const titleLines = wrapText(ev.title || '', width - pad * 2);
+                for (const ln of titleLines.slice(0, 3)) {
+                    if (cy + 16 > top + height - 2) break;
+                    ctx.fillText(ln, left + pad, cy);
+                    cy += 16;
+                }
+                ctx.font = `12px ${FONT}`;
+                const fmt = (d) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+                const time = `${fmt(s)} - ${fmt(e)}`;
+                if (cy + 14 <= top + height - 2) { ctx.fillText(time, left + pad, cy); cy += 14; }
+                if (ev.location && cy + 14 <= top + height - 2) {
+                    const loc = wrapText(ev.location, width - pad * 2)[0] || '';
+                    ctx.fillText(loc, left + pad, cy);
+                }
             }
         });
 
-        // Firefox: canvas.toBlob() peut lever 'The operation is insecure' si le canvas
-        // est tainté. On utilise toDataURL puis chrome.downloads via le background
-        // (chrome.downloads contourne les restrictions de link.click() depuis un content script).
-        let dataUrl;
-        try {
-            dataUrl = canvas.toDataURL('image/png');
-        } catch (e) {
-            throw new Error('Conversion PNG impossible (canvas sécurisé) : ' + e.message);
-        }
+        // Cadre extérieur
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0.5, 0.5, widthCss - 1, heightCss - 1);
 
-        await new Promise((resolve, reject) => {
-            chrome.runtime.sendMessage({ action: 'downloadFile', dataUrl, filename }, (response) => {
-                if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
-                if (!response || !response.success) return reject(new Error(response?.error || 'Téléchargement échoué'));
-                resolve();
-            });
-        });
+        // Canvas dessiné par nous-mêmes : jamais tainté. toBlob + blob URL + link.click()
+        // marchent sur Chrome ET Firefox content scripts (pas de SecurityError).
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('Échec de la conversion en PNG');
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     /**
@@ -697,9 +793,15 @@
                 // Les notifications sont gérées dans exportToGoogleCalendar()
 
             } else if (format === 'png') {
-                // Export image PNG via html2canvas
+                // Export image PNG : rendu manuel canvas (pas html2canvas, qui plante
+                // sur Firefox content scripts via toIFrame).
+                if (events.length === 0) {
+                    updateNotification('Aucun événement à exporter en image', 'error');
+                    hideNotification(3000);
+                    return;
+                }
                 const filename = `emploi-du-temps-cesi-${fileSuffix}.png`;
-                await downloadCalendarImage(filename);
+                await renderAndDownloadCalendarPNG(events, filename);
                 updateNotification(`✓ Image PNG téléchargée !`, 'success');
                 hideNotification(4000);
 
