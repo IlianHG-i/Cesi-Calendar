@@ -464,6 +464,14 @@
                 // du DOM cloné. Le calendrier est full-CSS, on n'en a pas besoin.
                 clonedDoc.querySelectorAll('img, iframe, video, canvas, embed, object').forEach(el => el.remove());
 
+                // Anti-taint Firefox (suite): supprimer toutes les background-image
+                // (CSS) qui pointent souvent sur des CDN cross-origin (icônes, polices,
+                // avatars). Une seule URL cross-origin rendue dans le canvas suffit
+                // à le tainter et faire échouer toDataURL().
+                const killBg = clonedDoc.createElement('style');
+                killBg.textContent = `* { background-image: none !important; list-style-image: none !important; cursor: auto !important; }`;
+                clonedDoc.head.appendChild(killBg);
+
                 // Supprimer la section "Soirée" en bas du calendrier (grille/bande supplémentaire).
                 // On cherche tout élément qui contient uniquement ce libellé et on masque son conteneur.
                 clonedDoc.querySelectorAll('*').forEach(el => {
@@ -710,6 +718,7 @@
             console.error('[CESI Exporter] Erreur lors de l\'export:', error);
             updateNotification(`Erreur : ${error.message}`, 'error');
             hideNotification(5000);
+            throw error;
         }
     }
 
